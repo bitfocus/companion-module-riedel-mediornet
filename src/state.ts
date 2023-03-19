@@ -5,6 +5,8 @@ import {EmberClient} from "emberplus-connection";
 import * as console from "console";
 import {NumberedTreeNodeImpl, ParameterImpl} from "emberplus-connection/dist/model";
 import {CompanionVariableValues} from "@companion-module/base";
+import {FeedbackId} from "./feedback";
+import {RootElement} from "emberplus-connection/dist/types";
 
 export enum matrixnames {
   video,
@@ -203,63 +205,72 @@ export class MediornetState {
         }
         this.self.setVariableValues(variableValues)
         this.self.updateCompanionBits()
-        console.log(inOutList)
       }
     }
   }
 
-  /*
-
-    public async subscribeMatrix(matrix: Matrix, emberClient: EmberClient): Promise<any> {
-      this.self.log('debug', 'entered subscribeMatrix. ' + matrix.label + ' on ' + matrix.path)
-      //get node
-      console.log(await emberClient.getElementByPath(matrix.path))
-      const node = await emberClient.getElementByPath(matrix.path).then(async (node) => {
-        // get Directory for node and give callback function for updates
-        if (node != undefined) {
-          await emberClient.getDirectory(node, FieldFlags.All, (update) => {
-            // update local matrix on update
-            if ('connections' in update['contents'] && update['contents']['connections'] != undefined) {
-              for (const key in update.contents.connections) {
-                const sources = update.contents.connections[key].sources
-                if (sources != undefined) {
-                  this.outputs[matrix.id][key].route = sources[0]
-                  this.outputs[matrix.id][key].fallback.push(sources[0])
-                }
-              }
-            }
-          })
-          this.self.log('debug', 'inside if')
-        }
-      }).catch((err) => this.self.log('error', matrix.path + ": Node does not exist. There is no matrix. " + err))
-
-      if (node != undefined) {
-        const labelPath = node['contents']['labels'][0]['basePath']
-
-        const labelNode = await emberClient.getElementByPath(labelPath).then(async (node) => {
-          if (node != undefined) return (await emberClient.getDirectory(node)).response
-          else return undefined
-        }).catch(() => console.log(labelPath + ": Node does not exist. There are no labels for matrix: " + matrix.path))
-
-        if (labelNode != undefined) {
-          const labelNodeCast = labelNode as RootElement
-          for (const key in labelNodeCast['children']) {
-            const keyCast = Number(key)
-            const node = labelNodeCast.children[keyCast]
-            if ('identifier' in node.contents && 'path' in node && typeof node['path'] == "string") {
-              if (node.contents.identifier == "targets") {
-                this.self.log('debug', "TARGETSSSS")
-                await this.getLabels(node['path'], matrix, emberClient)
-              } else if (node.contents.identifier == "sources") {
-                this.self.log('debug', "SOURCESSS")
-                await this.getLabels(node.path, matrix, emberClient)
-              }
-            }
-          }
-        }
+  public async subscribeMediornet(): Promise<void>{
+    if (this.self.emberClient.connected) {
+      let updatedConfig: MediornetConfig = {
+        inputCountString: '',
+        outputCountString: '',
       }
-      return 'tried to subscribe to matrix ' + matrix.label
-    }
+      let inputs = this.self.config.inputCountString.split(',')
+      let outputs = this.self.config.outputCountString.split(',')
+      for (let i = 0; i < this.matrices.length; i++) {
+        // for every matrix the module is subscribing to connections, labels and the corresponding updates
+        const matrix = this.matrices[i]
+        const matrixNode = await this.self.emberClient.getElementByPath(matrix.path).then(async (node) => {
+          return node
+        }).catch((err) => this.self.log('error', matrix.path + ": Node does not exist. There is no matrix. " + err))
 
-   */
+        if (matrixNode != undefined && 'labels' in matrixNode.contents && matrixNode['contents']['labels'] != undefined) {
+          const labelPath = matrixNode['contents']['labels'][0]['basePath']
+          const labelNode = await this.self.emberClient.getElementByPath(labelPath).then(async (node) => {
+            if (node != undefined) return (await this.self.emberClient.getDirectory(node)).response
+            else return undefined
+          }).catch(() => console.log(labelPath + ": Node does not exist. There are no labels for matrix: " + matrix.path))
+
+          //Update counts of matrix, that it matches the needed number for the coming lables
+          inputs[i] = matrixNode.contents.sourceCount != undefined ? String(matrixNode.contents.sourceCount) : '0'
+          outputs[i] = matrixNode.contents.targetCount != undefined ? String(matrixNode.contents.targetCount) : '0'
+          updatedConfig.inputCountString = inputs.join(',')
+          updatedConfig.outputCountString = outputs.join(',')
+          this.updateCounts(updatedConfig)
+
+          //Set callback for matrix to update internal matrix connection infos
+          await this.self.emberClient.getDirectory(matrixNode, FieldFlags.All, (matrixUpdate) => {
+            if ('connections' in matrixUpdate['contents'] && matrixUpdate['contents']['connections'] != undefined) {
+              for (const key in matrixUpdate.contents.connections) {
+                const sources = matrixUpdate.contents.connections[key].sources
+                if (sources != undefined) {
+                  if (this.outputs[matrix.id][key] != undefined) {
+                    this.outputs[matrix.id][key].route = sources[0]
+                    this.outputs[matrix.id][key].fallback.push(sources[0])
+                    this.self.checkFeedbacks(FeedbackId.SourceBackgroundRoutedVideo)
+                  } //if state.output.. undefined
+                }// if sources != undefined
+              } //for key in matrix.connections
+            } //if 'connections' in matrixUpdate
+          })// end getDirectory
+          if (labelNode != undefined) {
+
+            const labelNodeCast = labelNode as RootElement
+            for (const key in labelNodeCast['children']) {
+              const keyCast = Number(key)
+              const node = labelNodeCast.children[keyCast]
+              if ('identifier' in node.contents && 'path' in node && typeof node['path'] == "string") {
+                console.log( 'Got labels on ' + matrix.label + ' for ' + node.contents.identifier)
+                if (node.contents.identifier == "targets") {
+                  await this.getLabels(node.path, matrix, this.self.emberClient)
+                } else if (node.contents.identifier == "sources") {
+                  await this.getLabels(node.path, matrix, this.self.emberClient)
+                } // else if
+              } // if 'identifier in ...
+            } // for key in labelNodeCast
+          } // if labelNode is undefined
+        } // if matrixNode is undefined
+      } // for matrix in matrices
+    }// if emberclient.connected
+  }
 }
