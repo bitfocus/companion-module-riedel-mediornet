@@ -269,7 +269,7 @@ export class MediornetState {
                   if (this.outputs[matrix.id][key] != undefined) {
                     this.outputs[matrix.id][key].route = sources[0]
                     this.outputs[matrix.id][key].fallback.push(sources[0])
-                    this.self.checkFeedbacks(FeedbackId.SourceBackgroundRoutedVideo)
+                    this.self.checkFeedbacks(FeedbackId.SourceBackgroundRoutedVideo, FeedbackId.SourceBackgroundRoutedAudio, FeedbackId.SourceBackgroundRoutedData, FeedbackId.SourceBackgroundRoutedMChAudio, FeedbackId.SourceBackgroundRoutedGPIO)
                   } //if state.output.. undefined
                 }// if sources != undefined
               } //for key in matrix.connections

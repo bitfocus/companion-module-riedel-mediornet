@@ -41,7 +41,7 @@ export function GetFeedbacksList(
   const {inputChoices, outputChoices} = getInputChoices(state)
   const feedbacks: { [id in FeedbackId]: CompanionFeedbackDefinition | undefined } = {
     [FeedbackId.SourceBackgroundSelectedVideo]: {
-      name: 'Source Background If Selected',
+      name: 'Video Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
       type: "boolean",
       defaultStyle: {
@@ -64,7 +64,7 @@ export function GetFeedbacksList(
         return state.selectedSource[matrixnames.video] == feedback.options['source'];
       }
     },[FeedbackId.SourceBackgroundSelectedAudio]: {
-      name: 'Source Background If Selected',
+      name: 'Audio Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
       type: "boolean",
       defaultStyle: {
@@ -87,7 +87,7 @@ export function GetFeedbacksList(
         return state.selectedSource[matrixnames.audio] == feedback.options['source'];
       }
     },[FeedbackId.SourceBackgroundSelectedData]: {
-      name: 'Source Background If Selected',
+      name: 'Data Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
       type: "boolean",
       defaultStyle: {
@@ -110,7 +110,7 @@ export function GetFeedbacksList(
         return state.selectedSource[matrixnames.data] == feedback.options['source'];
       }
     },[FeedbackId.SourceBackgroundSelectedMChAudio]: {
-      name: 'Source Background If Selected',
+      name: 'MChAudio Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
       type: "boolean",
       defaultStyle: {
@@ -133,7 +133,7 @@ export function GetFeedbacksList(
         return state.selectedSource[matrixnames.multichannelaudio] == feedback.options['source'];
       }
     },[FeedbackId.SourceBackgroundSelectedGPIO]: {
-      name: 'Source Background If Selected',
+      name: 'GPI Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
       type: "boolean",
       defaultStyle: {
@@ -157,7 +157,7 @@ export function GetFeedbacksList(
       }
     },
     [FeedbackId.TargetBackgroundSelectedVideo]: {
-      name: 'Target Background if Selected',
+      name: 'Video Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
       type: "boolean",
       defaultStyle: {
@@ -181,7 +181,7 @@ export function GetFeedbacksList(
       }
     },
     [FeedbackId.TargetBackgroundSelectedAudio]: {
-      name: 'Target Background if Selected',
+      name: 'Audio Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
       type: "boolean",
       defaultStyle: {
@@ -205,7 +205,7 @@ export function GetFeedbacksList(
       }
     },
     [FeedbackId.TargetBackgroundSelectedData]: {
-      name: 'Target Background if Selected',
+      name: 'Data Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
       type: "boolean",
       defaultStyle: {
@@ -229,7 +229,7 @@ export function GetFeedbacksList(
       }
     },
     [FeedbackId.TargetBackgroundSelectedMChAudio]: {
-      name: 'Target Background if Selected',
+      name: 'MChAudio Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
       type: "boolean",
       defaultStyle: {
@@ -253,7 +253,7 @@ export function GetFeedbacksList(
       }
     },
     [FeedbackId.TargetBackgroundSelectedGPIO]: {
-      name: 'Target Background if Selected',
+      name: 'GPO Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
       type: "boolean",
       defaultStyle: {
@@ -277,7 +277,7 @@ export function GetFeedbacksList(
       }
     },
     [FeedbackId.SourceBackgroundRoutedVideo]: {
-      name: 'Source Background if routed on selected Target',
+      name: 'Video Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
       type: "boolean",
       defaultStyle: {
@@ -304,7 +304,7 @@ export function GetFeedbacksList(
       }
     },
     [FeedbackId.SourceBackgroundRoutedAudio]: {
-      name: 'Source Background if routed on selected Target',
+      name: 'Audio Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
       type: "boolean",
       defaultStyle: {
@@ -331,7 +331,7 @@ export function GetFeedbacksList(
       }
     },
     [FeedbackId.SourceBackgroundRoutedData]: {
-      name: 'Source Background if routed on selected Target',
+      name: 'Data Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
       type: "boolean",
       defaultStyle: {
@@ -358,7 +358,7 @@ export function GetFeedbacksList(
       }
     },
     [FeedbackId.SourceBackgroundRoutedMChAudio]: {
-      name: 'Source Background if routed on selected Target',
+      name: 'MChAudio Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
       type: "boolean",
       defaultStyle: {
@@ -385,7 +385,7 @@ export function GetFeedbacksList(
       }
     },
     [FeedbackId.SourceBackgroundRoutedGPIO]: {
-      name: 'Source Background if routed on selected Target',
+      name: 'GPI Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
       type: "boolean",
       defaultStyle: {

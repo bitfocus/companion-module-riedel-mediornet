@@ -108,7 +108,7 @@ const setSelectedSource =
       }
       self.log('debug', 'Take is: ' + config.take)
       if (config.take) doMatrixActionFunction(self, emberClient, state, matrix)
-      self.checkFeedbacks(FeedbackId.SourceBackgroundSelected)
+      self.checkFeedbacks(FeedbackId.SourceBackgroundSelectedVideo, FeedbackId.SourceBackgroundSelectedAudio, FeedbackId.SourceBackgroundSelectedData, FeedbackId.SourceBackgroundSelectedMChAudio, FeedbackId.SourceBackgroundSelectedGPIO)
       self.log('debug', 'setSelectedSource: ' + action.options['source'] + ' on Matrix: ' + state.matrices[matrix].label)
     }
 
@@ -125,7 +125,7 @@ const setSelectedTarget =
         state.selectedDestination[matrix] = Number(action.options['target'])
         state.selectedMatrix = matrix
       }
-      self.checkFeedbacks(FeedbackId.TargetBackgroundSelected)
+      self.checkFeedbacks(FeedbackId.TargetBackgroundSelectedVideo, FeedbackId.TargetBackgroundSelectedAudio, FeedbackId.TargetBackgroundSelectedData, FeedbackId.TargetBackgroundSelectedMChAudio, FeedbackId.TargetBackgroundSelectedGPIO)
       self.checkFeedbacks(FeedbackId.SourceBackgroundRoutedVideo)
       self.log('debug', 'setSelectedTarget: ' + action.options['target'] + ' on Matrix: ' + state.matrices[matrix].label)
     }
