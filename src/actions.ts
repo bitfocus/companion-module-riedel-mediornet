@@ -24,6 +24,13 @@ export enum ActionId {
   SetTargetGPIO = 'setTargetGPIO',
 }
 
+/**
+ * Performes a connection on a specified matrix.
+ * @param self reference to the BaseInstance
+ * @param emberClient reference to the emberClient
+ * @param state reference to the state of the module
+ * @param selMatrix number of the wanted matrix
+ */
 const doMatrixActionFunction = function (
   self: InstanceBase<MediornetConfig>,
   emberClient: EmberClient,
@@ -38,7 +45,6 @@ const doMatrixActionFunction = function (
     emberClient
       .getElementByPath(state.matrices[selMatrix].path)
       .then((node) => {
-        // TODO - do we handle not found?
         if (node && node.contents.type === EmberModel.ElementType.Matrix) {
           self.log('debug', 'Got node on ' + state.matrices[selMatrix].label)
           const target = state.selectedDestination[selMatrix]
@@ -55,6 +61,13 @@ const doMatrixActionFunction = function (
   }
 }
 
+/**
+ * Gets called, wenn take is not on Auto-Take.
+ * Performes a connect on the wanted matrix
+ * @param self reference to the BaseInstance
+ * @param emberClient reference to the emberClient
+ * @param state reference to the state of the module
+ */
 const doTake =
   (self: InstanceBase<MediornetConfig>, emberClient: EmberClient, state: MediornetState) =>
     (action: CompanionActionEvent): void => {
@@ -78,6 +91,15 @@ const doTake =
 
     }
 
+/**
+ * Selects a source on a specific matrix.
+ * When Auto-Take is enabled the source is routed to the selected target.
+ * @param self reference to the BaseInstance
+ * @param emberClient reference to the emberClient
+ * @param config reference to the config of the module
+ * @param state reference to the state of the module
+ * @param matrix number of the wanted matrix
+ */
 const setSelectedSource =
   (self: InstanceBase<MediornetConfig>, emberClient: EmberClient, config: MediornetConfig, state: MediornetState, matrix:number) =>
     (action: CompanionActionEvent): void => {
@@ -90,6 +112,12 @@ const setSelectedSource =
       self.log('debug', 'setSelectedSource: ' + action.options['source'] + ' on Matrix: ' + state.matrices[matrix].label)
     }
 
+/**
+ * Selects a target on a specified matrix.
+ * @param self reference to the BaseInstance
+ * @param state reference to the state of the module
+ * @param matrix number of the wanted matrix
+ */
 const setSelectedTarget =
   (self: InstanceBase<MediornetConfig>, state: MediornetState, matrix: number) =>
     (action: CompanionActionEvent): void => {
@@ -102,6 +130,14 @@ const setSelectedTarget =
       self.log('debug', 'setSelectedTarget: ' + action.options['target'] + ' on Matrix: ' + state.matrices[matrix].label)
     }
 
+/**
+ * Returns all implemented actions.
+ * @param self reference to the BaseInstance
+ * @param emberClient reference to the emberClient
+ * @param config reference to the config of the module
+ * @param state reference to the state of the module
+ * @constructor
+ */
 export function GetActionsList(
   self: InstanceBase<MediornetConfig>,
   emberClient: EmberClient,

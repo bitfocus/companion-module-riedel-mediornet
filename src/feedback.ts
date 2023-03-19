@@ -14,6 +14,13 @@ export enum FeedbackId {
   SourceBackgroundRoutedVideo = 'sourceBackgroundRouted',
 }
 
+/**
+ * Returns all implemented Feedbacks.
+ * @param _self reference to the BaseInstance
+ * @param _emberClient reference to the emberClient
+ * @param state reference to the state of the module
+ * @constructor
+ */
 export function GetFeedbacksList(
   _self: InstanceBase<MediornetConfig>,
   _emberClient: EmberClient,

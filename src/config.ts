@@ -8,6 +8,10 @@ export interface MediornetConfig {
   outputCountString: string
 }
 
+/**
+ * Returns all configFields for the Webconfig.
+ * @constructor
+ */
 export function GetConfigFields(): SomeCompanionConfigField[] {
   return [
     {

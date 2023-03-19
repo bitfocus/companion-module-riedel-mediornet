@@ -19,13 +19,6 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
   config!: MediornetConfig
   private state!: MediornetState
 
-
-  // Override base types to make types stricter
-  public checkFeedbacks(...feedbackTypes: string[]): void {
-    // todo - arg should be of type FeedbackId
-    super.checkFeedbacks(...feedbackTypes)
-  }
-
   /**
    * Main initialization function called once the module
    * is OK to start doing things.
@@ -65,18 +58,24 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
     this.emberClient.discard()
   }
 
+  /**
+   * Updates all Actions and Feedbacks.
+   * Initializes all Variables.
+   */
   public updateCompanionBits(): void {
-    this.setActionDefinitions(GetActionsList(this, this.client, this.config, this.state))
-    this.setFeedbackDefinitions(GetFeedbacksList(this, this.client, this.state))
+    this.setActionDefinitions(GetActionsList(this, this.emberClient, this.config, this.state))
+    this.setFeedbackDefinitions(GetFeedbacksList(this, this.emberClient, this.state))
     initVariables(this, this.state);
 
   }// end updateCompanionBits
 
-
-  private get client(): EmberClient {
-    return this.emberClient
-  }
-
+  /**
+   * Set's up the connection to the Mediornet.
+   * Changes the status of the module, depeding of the connection's status.
+   * On Connection state.subscribeMediornet() is called, to get all the relevent information.
+   * Updates CompanionBits afterwards.
+   * @private
+   */
   private async setupEmberConnection(): Promise<void> {
     this.log('debug', 'connecting ' + (this.config.host || '') + ':' + 9000)
     this.updateStatus(InstanceStatus.Connecting)

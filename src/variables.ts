@@ -3,7 +3,9 @@ import type {MediornetConfig} from './config.js'
 import type {MediornetState} from './state.js'
 
 /**
- * Initialize variables.
+ * Initializes all variables
+ * @param self reference to the BaseInstance
+ * @param state reference to the modules state
  */
 export function initVariables(self: InstanceBase<MediornetConfig>, state: MediornetState): void {
   const variableDefinitions: CompanionVariableDefinition[] = []
@@ -52,7 +54,7 @@ export function initVariables(self: InstanceBase<MediornetConfig>, state: Medior
     variableId: 'selected_source',
   })
 
-  updateSelectedDestinationVariables(state, variableValues)
+//  updateSelectedDestinationVariables(state, variableValues)
 
   self.setVariableDefinitions(variableDefinitions)
   self.setVariableValues(variableValues)

@@ -139,22 +139,39 @@ export class MediornetState {
     return this.outputs[matrix][id]
   }
 
-  public getPrimaryOutput(id: number, type: number): OutputState | undefined {
-    return this.outputs[type][id]
-  }
-
+  /**
+   * Returns an output of a specified matrix.
+   * The output is currently selected on the matrix
+   * @param matrix the matrix which selected Output is wanted
+   */
   public getSelectedOutput(matrix: number): OutputState | undefined {
     return this.selectedDestination !== undefined ? this.getOutputById(this.selectedDestination[matrix], matrix) : undefined
   }
 
+  /**
+   * Returns all Inputs of a specified matrix.
+   * @param matrix the matrix which inputs are wanted
+   */
   public iterateInputs(matrix: number): InputState[] {
     return this.inputs[matrix]
   }
 
+  /**
+   * Returns all Outputs of a specified matrix.
+   * @param matrix the matrix which outputs are wanted
+   */
   public iterateOutputs(matrix: number): OutputState[] {
     return this.outputs[matrix]
   }
 
+  /**
+   * This function expects a path to possible labels for a specified matrix
+   * It checks, wether the path is valid, and writes all recieved labels into the inputs and outputs.
+   * For coming updates, each labelPath is subscribed with a callback function.
+   * @param labelPath path to potential Labels
+   * @param matrix matrix for which the labels are used
+   * @param emberClient reference to the emberClient
+   */
   async getLabels(labelPath: string, matrix: Matrix,
                   emberClient: EmberClient): Promise<void> {
     //get labelParentNode
@@ -209,7 +226,12 @@ export class MediornetState {
     }
   }
 
+  /**
+   * Initially reads all wanted values from the Mediornet.
+   * Callbacks are given for wanted updates.
+   */
   public async subscribeMediornet(): Promise<void>{
+    // MATRIX --------------
     if (this.self.emberClient.connected) {
       let updatedConfig: MediornetConfig = {
         inputCountString: '',

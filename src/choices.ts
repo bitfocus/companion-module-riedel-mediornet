@@ -7,7 +7,8 @@ export interface InputChoicesResult {
 }
 
 /**
- * INTERNAL: use model data to define the choices for the dropdowns.
+ * Returns InputChoices for Actions and Feedbacks.
+ * @param state reference to the BaseInstance
  */
 export function getInputChoices(state: MediornetState): InputChoicesResult {
   const result: InputChoicesResult = {
