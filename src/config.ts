@@ -37,7 +37,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
     {
       type: 'textinput',
       id: 'outputCountString',
-      label: 'Number of Inputs',
+      label: 'Number of Outputs',
       tooltip: 'Used, when there is no connection. Seperated by comma.',
       width: 6,
       default: '0,0,0,0,0',

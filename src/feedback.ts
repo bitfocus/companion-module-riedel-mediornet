@@ -3,13 +3,15 @@ import {
   CompanionFeedbackDefinitions,
   combineRgb, InstanceBase
 } from '@companion-module/base'
-import { EmberClient } from 'emberplus-connection'
+import {EmberClient} from 'emberplus-connection'
 import {MediornetConfig} from "./config";
-import {MediornetState} from "./state";
+import {matrixnames, MediornetState} from "./state";
+import {getInputChoices} from "./choices";
 
 export enum FeedbackId {
   SourceBackgroundSelected = 'sourceBackgroundSelected',
-  TargetBackgroundSelected = 'targetBackgroundSelected'
+  TargetBackgroundSelected = 'targetBackgroundSelected',
+  SourceBackgroundRoutedVideo = 'sourceBackgroundRouted',
 }
 
 export function GetFeedbacksList(
@@ -17,6 +19,7 @@ export function GetFeedbacksList(
   _emberClient: EmberClient,
   state: MediornetState
 ): CompanionFeedbackDefinitions {
+  const {inputChoices} = getInputChoices(state)
   const feedbacks: { [id in FeedbackId]: CompanionFeedbackDefinition | undefined } = {
     [FeedbackId.SourceBackgroundSelected]: {
       name: 'Source Background If Selected',
@@ -85,7 +88,34 @@ export function GetFeedbacksList(
       callback: (feedback) => {
         return (state.selectedDestination[Number(feedback.options['matrix'])] == feedback.options['target'])
       }
-    }
+    },
+    [FeedbackId.SourceBackgroundRoutedVideo]: {
+      name: 'Source Background if routed on selected Target',
+      description: 'Change Background of Source, when it is currently routed on the selected target.',
+      type: "boolean",
+      defaultStyle: {
+        // The default style change for a boolean feedback
+        // The user will be able to customise these values as well as the fields that will be changed
+        bgcolor: combineRgb(255, 0, 0),
+        color: combineRgb(0, 0, 0),
+      },
+      options: [
+        {
+          type: 'dropdown',
+          label: 'Value',
+          id: 'source',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.video]
+        }
+      ],
+      callback: (feedback) => {
+        if (state.outputs == undefined ||
+          state.outputs[matrixnames.video][state.selectedDestination[matrixnames.video]] == undefined ||
+          state.outputs[matrixnames.video][state.selectedDestination[matrixnames.video]].route == undefined) return false
+        return (feedback.options['source'] == state.outputs[matrixnames.video][state.selectedDestination[matrixnames.video]].route)
+      }
+    },
   }
 
   return feedbacks

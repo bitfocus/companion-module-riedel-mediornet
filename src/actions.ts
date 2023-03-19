@@ -12,8 +12,16 @@ import {getInputChoices} from "./choices";
 
 export enum ActionId {
   Take = 'take',
-  SetSelectedSource = 'setSelectedSource',
-  SetSelectedTarget = 'setSelectedTarget',
+  SetSourceVideo = 'setSourceVideo',
+  SetTargetVideo = 'setTargetVideo',
+  SetSourceAudio = 'setSourceAudio',
+  SetTargetAudio = 'setTargetAudio',
+  SetSourceData = 'setSourceData',
+  SetTargetData = 'setTargetData',
+  SetSourceMChAudio = 'setSourceMChAudio',
+  SetTargetMChAudio = 'setTargetMChAduio',
+  SetSourceGPIO = 'setSourceGPIO',
+  SetTargetGPIO = 'setTargetGPIO',
 }
 
 const doMatrixActionFunction = function (
@@ -71,25 +79,27 @@ const doTake =
     }
 
 const setSelectedSource =
-  (self: InstanceBase<MediornetConfig>, emberClient: EmberClient, config: MediornetConfig, state: MediornetState) =>
+  (self: InstanceBase<MediornetConfig>, emberClient: EmberClient, config: MediornetConfig, state: MediornetState, matrix:number) =>
     (action: CompanionActionEvent): void => {
-      if (action.options['source'] != -1 && action.options['matrix'] != -1) {
-        state.selectedSource[Number(action.options['matrix'])] = Number(action.options['source'])
+      if (action.options['source'] != -1) {
+        state.selectedSource[matrix] = Number(action.options['source'])
       }
       self.log('debug', 'Take is: ' + config.take)
-      if (config.take) doMatrixActionFunction(self, emberClient, state, Number(action.options['matrix']))
+      if (config.take) doMatrixActionFunction(self, emberClient, state, matrix)
       self.checkFeedbacks(FeedbackId.SourceBackgroundSelected)
-      self.log('debug', 'setSelectedSource: ' + action.options['source'] + ' on Matrix: ' + action.options['matrix'])
+      self.log('debug', 'setSelectedSource: ' + action.options['source'] + ' on Matrix: ' + state.matrices[matrix].label)
     }
 
 const setSelectedTarget =
-  (self: InstanceBase<MediornetConfig>, state: MediornetState) =>
+  (self: InstanceBase<MediornetConfig>, state: MediornetState, matrix: number) =>
     (action: CompanionActionEvent): void => {
-      if (action.options['target'] != -1 && action.options['matrix'] != -1 && state.selectedDestination) {
-        state.selectedDestination[Number(action.options['matrix'])] = Number(action.options['target'])
+      if (action.options['target'] != -1 && state.selectedDestination) {
+        state.selectedDestination[matrix] = Number(action.options['target'])
+        state.selectedMatrix = matrix
       }
       self.checkFeedbacks(FeedbackId.TargetBackgroundSelected)
-      self.log('debug', 'setSelectedTarget: ' + action.options['target'] + ' on Matrix: ' + action.options['matrix'])
+      self.checkFeedbacks(FeedbackId.SourceBackgroundRoutedVideo)
+      self.log('debug', 'setSelectedTarget: ' + action.options['target'] + ' on Matrix: ' + state.matrices[matrix].label)
     }
 
 export function GetActionsList(
@@ -99,7 +109,7 @@ export function GetActionsList(
   state: MediornetState
 ): CompanionActionDefinitions {
 
-  const { inputChoices, outputChoices, matrixChoices } = getInputChoices(state)
+  const { inputChoices, outputChoices } = getInputChoices(state)
 
   const actions: { [id in ActionId]: CompanionActionDefinition | undefined } = {
     [ActionId.Take]: {
@@ -117,16 +127,9 @@ export function GetActionsList(
       ],
       callback: doTake(self, emberClient, state),
     },
-    [ActionId.SetSelectedSource]: {
-      name: 'Set Selected Source',
+    [ActionId.SetSourceVideo]: {
+      name: 'Select Video Source',
       options: [
-        {
-          type: 'dropdown',
-          label: 'Select Matrix Number',
-          id: 'matrix',
-          default: 0,
-          choices: matrixChoices
-        },
         {
           type: 'dropdown',
           label: 'Value',
@@ -136,18 +139,11 @@ export function GetActionsList(
           choices: inputChoices[matrixnames.video]
         },
       ],
-      callback: setSelectedSource(self, emberClient, config, state),
+      callback: setSelectedSource(self, emberClient, config, state, matrixnames.video),
     },
-    [ActionId.SetSelectedTarget]: {
-      name: 'Set Selected Target',
+    [ActionId.SetTargetVideo]: {
+      name: 'Select Video Target',
       options: [
-        {
-          type: 'dropdown',
-          label: 'Select Matrix Number',
-          id: 'matrix',
-          default: 0,
-          choices: matrixChoices
-        },
         {
           type: 'dropdown',
           label: 'Value',
@@ -157,7 +153,119 @@ export function GetActionsList(
           choices: outputChoices[matrixnames.video]
         },
       ],
-      callback: setSelectedTarget(self, state),
+      callback: setSelectedTarget(self, state, matrixnames.video),
+    },
+    [ActionId.SetSourceAudio]: {
+      name: 'Select Audio Source',
+      options: [
+        {
+          type: 'dropdown',
+          label: 'Value',
+          id: 'source',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.audio]
+        },
+      ],
+      callback: setSelectedSource(self, emberClient, config, state, matrixnames.audio),
+    },
+    [ActionId.SetTargetAudio]: {
+      name: 'Select Audio Target',
+      options: [
+        {
+          type: 'dropdown',
+          label: 'Value',
+          id: 'target',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.audio]
+        },
+      ],
+      callback: setSelectedTarget(self, state, matrixnames.audio),
+    },
+    [ActionId.SetSourceData]: {
+      name: 'Select Data Source',
+      options: [
+        {
+          type: 'dropdown',
+          label: 'Value',
+          id: 'source',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.data]
+        },
+      ],
+      callback: setSelectedSource(self, emberClient, config, state, matrixnames.data),
+    },
+    [ActionId.SetTargetData]: {
+      name: 'Select Data Target',
+      options: [
+        {
+          type: 'dropdown',
+          label: 'Value',
+          id: 'target',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.data]
+        },
+      ],
+      callback: setSelectedTarget(self, state, matrixnames.data),
+    },
+    [ActionId.SetSourceMChAudio]: {
+      name: 'Select MultiChannelAudio Source',
+      options: [
+        {
+          type: 'dropdown',
+          label: 'Value',
+          id: 'source',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.multichannelaudio]
+        },
+      ],
+      callback: setSelectedSource(self, emberClient, config, state, matrixnames.multichannelaudio),
+    },
+    [ActionId.SetTargetMChAudio]: {
+      name: 'Select MultiChannelAudio Target',
+      options: [
+        {
+          type: 'dropdown',
+          label: 'Value',
+          id: 'target',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.multichannelaudio]
+        },
+      ],
+      callback: setSelectedTarget(self, state, matrixnames.multichannelaudio),
+    },
+    [ActionId.SetSourceGPIO]: {
+      name: 'Select GPI Source',
+      options: [
+        {
+          type: 'dropdown',
+          label: 'Value',
+          id: 'source',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.gpio]
+        },
+      ],
+      callback: setSelectedSource(self, emberClient, config, state, matrixnames.gpio),
+    },
+    [ActionId.SetTargetGPIO]: {
+      name: 'Select GPO Target',
+      options: [
+        {
+          type: 'dropdown',
+          label: 'Value',
+          id: 'target',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.gpio]
+        },
+      ],
+      callback: setSelectedTarget(self, state, matrixnames.gpio),
     },
   }
 
