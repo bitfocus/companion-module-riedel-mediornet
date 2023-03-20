@@ -10,6 +10,7 @@ import {GetFeedbacksList} from './feedback'
 import {EmberClient} from 'emberplus-connection' // note - emberplus-conn is in parent repo, not sure if it needs to be defined as dependency
 import {MediornetState} from "./state";
 import {initVariables} from "./variables";
+import {GetPresetsList} from "./presets";
 
 /**
  * Companion instance class for Riedels Mediornet Devices
@@ -65,6 +66,7 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
   public updateCompanionBits(): void {
     this.setActionDefinitions(GetActionsList(this, this.emberClient, this.config, this.state))
     this.setFeedbackDefinitions(GetFeedbacksList(this, this.emberClient, this.state))
+    this.setPresetDefinitions(GetPresetsList(this.state))
     initVariables(this, this.state);
 
   }// end updateCompanionBits

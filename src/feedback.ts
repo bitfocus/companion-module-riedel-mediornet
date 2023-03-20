@@ -9,21 +9,23 @@ import {matrixnames, MediornetState} from "./state";
 import {getInputChoices} from "./choices";
 
 export enum FeedbackId {
-  SourceBackgroundSelectedVideo = 'sourceBackgroundSelectedVideo',
-  SourceBackgroundSelectedAudio = 'sourceBackgroundSelectedAudio',
-  SourceBackgroundSelectedData = 'sourceBackgroundSelectedData',
-  SourceBackgroundSelectedMChAudio = 'sourceBackgroundSelectedMChAudio',
-  SourceBackgroundSelectedGPIO = 'sourceBackgroundSelectedGPIO',
-  TargetBackgroundSelectedVideo = 'targetBackgroundSelectedVideo',
-  TargetBackgroundSelectedAudio = 'targetBackgroundSelectedAudio',
-  TargetBackgroundSelectedData = 'targetBackgroundSelectedData',
-  TargetBackgroundSelectedMChAudio = 'targetBackgroundSelectedMChAudio',
-  TargetBackgroundSelectedGPIO = 'targetBackgroundSelectedGPIO',
-  SourceBackgroundRoutedVideo = 'sourceBackgroundRoutedVideo',
-  SourceBackgroundRoutedAudio = 'sourceBackgroundRoutedAudio',
-  SourceBackgroundRoutedData = 'sourceBackgroundRoutedData',
-  SourceBackgroundRoutedMChAudio = 'sourceBackgroundRoutedMChAudio',
-  SourceBackgroundRoutedGPIO = 'sourceBackgroundRoutedGPIO',
+  Take = 'take',
+  Clear = 'clear',
+  SelectedSourceVideo = 'selected_source_video',
+  SelectedSourceAudio = 'selected_source_audio',
+  SelectedSourceData = 'selected_source_data',
+  SelectedSourceMultiChannelAudio = 'selected_source_multichannelaudio',
+  SelectedSourceGPIO = 'selected_source_gpio',
+  SelectedTargetVideo = 'selected_target_video',
+  SelectedTargetAudio = 'selected_target_audio',
+  SelectedTargetData = 'selected_target_data',
+  SelectedTargetMultiChannelAudio = 'selected_target_multichannelaudio',
+  SelectedTargetGPIO = 'selected_target_gpio',
+  TakeTallySourceVideo = 'take_tally_source_video',
+  TakeTallySourceAudio = 'take_tally_source_audio',
+  TakeTallySourceData = 'take_tally_source_data',
+  TakeTallySourceMultiChannelAudio = 'take_tally_source_multichannelaudio',
+  TakeTallySourceGPIO = 'take_tally_source_gpio',
 }
 
 /**
@@ -40,7 +42,34 @@ export function GetFeedbacksList(
 ): CompanionFeedbackDefinitions {
   const {inputChoices, outputChoices} = getInputChoices(state)
   const feedbacks: { [id in FeedbackId]: CompanionFeedbackDefinition | undefined } = {
-    [FeedbackId.SourceBackgroundSelectedVideo]: {
+    [FeedbackId.Take]: {
+      name: 'Take is possible',
+      description: 'Shows if there is take possible',
+      type: "boolean",
+      defaultStyle: {
+        bgcolor: combineRgb(255, 255, 255),
+        color: combineRgb(255, 0, 0),
+      },
+      options: [],
+      callback: () =>{
+        return state.selectedDestination != -1 && state.selectedSource != -1 && state.selectedMatrix != -1 && state.selectedSource != state.outputs[state.selectedMatrix][state.selectedDestination].route
+      }
+    },
+    [FeedbackId.Clear]: {
+      name: 'Clear is possible',
+      description: 'Changes when a selection is made.',
+      type: "boolean",
+      defaultStyle: {
+        bgcolor: combineRgb(255, 255, 255),
+        color: combineRgb(255, 0, 0),
+      },
+      options: [],
+      callback: () =>{
+        return state.selectedDestination != -1 || state.selectedSource != -1 || state.selectedMatrix != -1
+      }
+    },
+
+    [FeedbackId.SelectedSourceVideo]: {
       name: 'Video Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
       type: "boolean",
@@ -61,9 +90,9 @@ export function GetFeedbacksList(
         }
       ],
       callback: (feedback) => {
-        return state.selectedSource[matrixnames.video] == feedback.options['source'];
+        return state.selectedSource == feedback.options['source'] && state.selectedMatrix == matrixnames.video;
       }
-    },[FeedbackId.SourceBackgroundSelectedAudio]: {
+    },[FeedbackId.SelectedSourceAudio]: {
       name: 'Audio Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
       type: "boolean",
@@ -84,9 +113,9 @@ export function GetFeedbacksList(
         }
       ],
       callback: (feedback) => {
-        return state.selectedSource[matrixnames.audio] == feedback.options['source'];
+        return state.selectedSource == feedback.options['source'] && state.selectedMatrix == matrixnames.audio;
       }
-    },[FeedbackId.SourceBackgroundSelectedData]: {
+    },[FeedbackId.SelectedSourceData]: {
       name: 'Data Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
       type: "boolean",
@@ -107,9 +136,9 @@ export function GetFeedbacksList(
         }
       ],
       callback: (feedback) => {
-        return state.selectedSource[matrixnames.data] == feedback.options['source'];
+        return state.selectedSource == feedback.options['source'] && state.selectedMatrix == matrixnames.data;
       }
-    },[FeedbackId.SourceBackgroundSelectedMChAudio]: {
+    },[FeedbackId.SelectedSourceMultiChannelAudio]: {
       name: 'MChAudio Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
       type: "boolean",
@@ -130,9 +159,9 @@ export function GetFeedbacksList(
         }
       ],
       callback: (feedback) => {
-        return state.selectedSource[matrixnames.multichannelaudio] == feedback.options['source'];
+        return state.selectedSource == feedback.options['source'] && state.selectedMatrix == matrixnames.multichannelaudio;
       }
-    },[FeedbackId.SourceBackgroundSelectedGPIO]: {
+    },[FeedbackId.SelectedSourceGPIO]: {
       name: 'GPI Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
       type: "boolean",
@@ -153,10 +182,10 @@ export function GetFeedbacksList(
         }
       ],
       callback: (feedback) => {
-        return state.selectedSource[matrixnames.gpio] == feedback.options['source'];
+        return state.selectedSource == feedback.options['source'] && state.selectedMatrix == matrixnames.gpio;
       }
     },
-    [FeedbackId.TargetBackgroundSelectedVideo]: {
+    [FeedbackId.SelectedTargetVideo]: {
       name: 'Video Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
       type: "boolean",
@@ -177,10 +206,10 @@ export function GetFeedbacksList(
         }
       ],
       callback: (feedback) => {
-        return (state.selectedDestination[matrixnames.video] == feedback.options['target'])
+        return (state.selectedDestination == feedback.options['target'] && state.selectedMatrix == matrixnames.video)
       }
     },
-    [FeedbackId.TargetBackgroundSelectedAudio]: {
+    [FeedbackId.SelectedTargetAudio]: {
       name: 'Audio Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
       type: "boolean",
@@ -201,10 +230,10 @@ export function GetFeedbacksList(
         }
       ],
       callback: (feedback) => {
-        return (state.selectedDestination[matrixnames.audio] == feedback.options['target'])
+        return (state.selectedDestination == feedback.options['target'] && state.selectedMatrix == matrixnames.audio)
       }
     },
-    [FeedbackId.TargetBackgroundSelectedData]: {
+    [FeedbackId.SelectedTargetData]: {
       name: 'Data Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
       type: "boolean",
@@ -225,10 +254,10 @@ export function GetFeedbacksList(
         }
       ],
       callback: (feedback) => {
-        return (state.selectedDestination[matrixnames.data] == feedback.options['target'])
+        return (state.selectedDestination == feedback.options['target'] && state.selectedMatrix == matrixnames.data)
       }
     },
-    [FeedbackId.TargetBackgroundSelectedMChAudio]: {
+    [FeedbackId.SelectedTargetMultiChannelAudio]: {
       name: 'MChAudio Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
       type: "boolean",
@@ -249,10 +278,10 @@ export function GetFeedbacksList(
         }
       ],
       callback: (feedback) => {
-        return (state.selectedDestination[matrixnames.multichannelaudio] == feedback.options['target'])
+        return (state.selectedDestination == feedback.options['target'] && state.selectedMatrix == matrixnames.multichannelaudio)
       }
     },
-    [FeedbackId.TargetBackgroundSelectedGPIO]: {
+    [FeedbackId.SelectedTargetGPIO]: {
       name: 'GPO Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
       type: "boolean",
@@ -273,10 +302,10 @@ export function GetFeedbacksList(
         }
       ],
       callback: (feedback) => {
-        return (state.selectedDestination[matrixnames.gpio] == feedback.options['target'])
+        return (state.selectedDestination == feedback.options['target'] && state.selectedMatrix == matrixnames.gpio)
       }
     },
-    [FeedbackId.SourceBackgroundRoutedVideo]: {
+    [FeedbackId.TakeTallySourceVideo]: {
       name: 'Video Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
       type: "boolean",
@@ -298,12 +327,13 @@ export function GetFeedbacksList(
       ],
       callback: (feedback) => {
         if (state.outputs == undefined ||
-          state.outputs[matrixnames.video][state.selectedDestination[matrixnames.video]] == undefined ||
-          state.outputs[matrixnames.video][state.selectedDestination[matrixnames.video]].route == undefined) return false
-        return (feedback.options['source'] == state.outputs[matrixnames.video][state.selectedDestination[matrixnames.video]].route)
+          state.outputs[matrixnames.video][state.selectedDestination] == undefined ||
+          state.outputs[matrixnames.video][state.selectedDestination].route == undefined ||
+          state.selectedMatrix !== matrixnames.video) return false
+        return (feedback.options['source'] == state.outputs[matrixnames.video][state.selectedDestination].route)
       }
     },
-    [FeedbackId.SourceBackgroundRoutedAudio]: {
+    [FeedbackId.TakeTallySourceAudio]: {
       name: 'Audio Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
       type: "boolean",
@@ -325,12 +355,13 @@ export function GetFeedbacksList(
       ],
       callback: (feedback) => {
         if (state.outputs == undefined ||
-          state.outputs[matrixnames.audio][state.selectedDestination[matrixnames.audio]] == undefined ||
-          state.outputs[matrixnames.audio][state.selectedDestination[matrixnames.audio]].route == undefined) return false
-        return (feedback.options['source'] == state.outputs[matrixnames.audio][state.selectedDestination[matrixnames.audio]].route)
+          state.outputs[matrixnames.audio][state.selectedDestination] == undefined ||
+          state.outputs[matrixnames.audio][state.selectedDestination].route == undefined ||
+          state.selectedMatrix !== matrixnames.multichannelaudio) return false
+        return (feedback.options['source'] == state.outputs[matrixnames.audio][state.selectedDestination].route)
       }
     },
-    [FeedbackId.SourceBackgroundRoutedData]: {
+    [FeedbackId.TakeTallySourceData]: {
       name: 'Data Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
       type: "boolean",
@@ -352,12 +383,13 @@ export function GetFeedbacksList(
       ],
       callback: (feedback) => {
         if (state.outputs == undefined ||
-          state.outputs[matrixnames.data][state.selectedDestination[matrixnames.data]] == undefined ||
-          state.outputs[matrixnames.data][state.selectedDestination[matrixnames.data]].route == undefined) return false
-        return (feedback.options['source'] == state.outputs[matrixnames.data][state.selectedDestination[matrixnames.data]].route)
+          state.outputs[matrixnames.data][state.selectedDestination] == undefined ||
+          state.outputs[matrixnames.data][state.selectedDestination].route == undefined ||
+          state.selectedMatrix !== matrixnames.data) return false
+        return (feedback.options['source'] == state.outputs[matrixnames.data][state.selectedDestination].route)
       }
     },
-    [FeedbackId.SourceBackgroundRoutedMChAudio]: {
+    [FeedbackId.TakeTallySourceMultiChannelAudio]: {
       name: 'MChAudio Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
       type: "boolean",
@@ -379,12 +411,13 @@ export function GetFeedbacksList(
       ],
       callback: (feedback) => {
         if (state.outputs == undefined ||
-          state.outputs[matrixnames.multichannelaudio][state.selectedDestination[matrixnames.multichannelaudio]] == undefined ||
-          state.outputs[matrixnames.multichannelaudio][state.selectedDestination[matrixnames.multichannelaudio]].route == undefined) return false
-        return (feedback.options['source'] == state.outputs[matrixnames.multichannelaudio][state.selectedDestination[matrixnames.multichannelaudio]].route)
+          state.outputs[matrixnames.multichannelaudio][state.selectedDestination] == undefined ||
+          state.outputs[matrixnames.multichannelaudio][state.selectedDestination].route == undefined ||
+          state.selectedMatrix !== matrixnames.multichannelaudio) return false
+        return (feedback.options['source'] == state.outputs[matrixnames.multichannelaudio][state.selectedDestination].route)
       }
     },
-    [FeedbackId.SourceBackgroundRoutedGPIO]: {
+    [FeedbackId.TakeTallySourceGPIO]: {
       name: 'GPI Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
       type: "boolean",
@@ -406,9 +439,10 @@ export function GetFeedbacksList(
       ],
       callback: (feedback) => {
         if (state.outputs == undefined ||
-          state.outputs[matrixnames.gpio][state.selectedDestination[matrixnames.gpio]] == undefined ||
-          state.outputs[matrixnames.gpio][state.selectedDestination[matrixnames.gpio]].route == undefined) return false
-        return (feedback.options['source'] == state.outputs[matrixnames.gpio][state.selectedDestination[matrixnames.gpio]].route)
+          state.outputs[matrixnames.gpio][state.selectedDestination] == undefined ||
+          state.outputs[matrixnames.gpio][state.selectedDestination].route == undefined ||
+          state.selectedMatrix !== matrixnames.gpio) return false
+        return (feedback.options['source'] == state.outputs[matrixnames.gpio][state.selectedDestination].route)
       }
     },
   }

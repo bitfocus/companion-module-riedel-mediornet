@@ -50,8 +50,8 @@ export interface OutputState {
 
 export class MediornetState {
   self: MediornetInstance
-  selectedSource: number[]
-  selectedDestination: number[]
+  selectedSource: number
+  selectedDestination: number
   selectedMatrix: number
   matrices: Matrix[]
   //queuedOp: QueueOperation | undefined
@@ -77,8 +77,8 @@ export class MediornetState {
       this.outputs[i] = []
     }
     this.selectedMatrix = -1
-    this.selectedDestination = [-1, -1, -1, -1, -1]
-    this.selectedSource = [-1, -1, -1, -1, -1]
+    this.selectedDestination = -1
+    this.selectedSource = -1
 
 
     this.updateCounts({inputCountString: '1005,1005,1005,1005,1005', outputCountString: '0,0,0,0,0'})
@@ -140,12 +140,11 @@ export class MediornetState {
   }
 
   /**
-   * Returns an output of a specified matrix.
-   * The output is currently selected on the matrix
-   * @param matrix the matrix which selected Output is wanted
+   * Returns the currently selected Output, if it is of the same matrix.
+   * @param matrix the matrix id to check against the selected Output
    */
   public getSelectedOutput(matrix: number): OutputState | undefined {
-    return this.selectedDestination !== undefined ? this.getOutputById(this.selectedDestination[matrix], matrix) : undefined
+    return this.selectedDestination !== undefined && this.selectedMatrix == matrix ? this.getOutputById(this.selectedDestination, matrix) : undefined
   }
 
   /**
@@ -269,7 +268,7 @@ export class MediornetState {
                   if (this.outputs[matrix.id][key] != undefined) {
                     this.outputs[matrix.id][key].route = sources[0]
                     this.outputs[matrix.id][key].fallback.push(sources[0])
-                    this.self.checkFeedbacks(FeedbackId.SourceBackgroundRoutedVideo, FeedbackId.SourceBackgroundRoutedAudio, FeedbackId.SourceBackgroundRoutedData, FeedbackId.SourceBackgroundRoutedMChAudio, FeedbackId.SourceBackgroundRoutedGPIO)
+                    this.self.checkFeedbacks(FeedbackId.TakeTallySourceVideo, FeedbackId.TakeTallySourceAudio, FeedbackId.TakeTallySourceData, FeedbackId.TakeTallySourceMultiChannelAudio, FeedbackId.TakeTallySourceGPIO)
                   } //if state.output.. undefined
                 }// if sources != undefined
               } //for key in matrix.connections
