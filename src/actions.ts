@@ -9,6 +9,7 @@ import { MediornetConfig } from './config'
 import { FeedbackId } from './feedback'
 import { matrixnames, MediornetState } from './state'
 import { getInputChoices } from './choices'
+import { updateSelectedTargetVariables } from './variables'
 
 export enum ActionId {
   Take = 'take',
@@ -82,6 +83,7 @@ const doMatrixActionFunction = function (
           FeedbackId.Take,
           FeedbackId.Clear
         )
+        updateSelectedTargetVariables(self, state)
       })
   }
 }
@@ -138,6 +140,7 @@ const doClear = (self: InstanceBase<MediornetConfig>, state: MediornetState) => 
     FeedbackId.Take,
     FeedbackId.Clear
   )
+  updateSelectedTargetVariables(self, state)
 }
 
 /**
@@ -171,6 +174,7 @@ const setSelectedSource =
         FeedbackId.Take,
         FeedbackId.Clear
       )
+      updateSelectedTargetVariables(self, state)
       self.log(
         'debug',
         'setSelectedSource: ' + action.options['source'] + ' on Matrix: ' + state.matrices[matrix].label
@@ -211,6 +215,7 @@ const setSelectedTarget =
       FeedbackId.Take,
       FeedbackId.Clear
     )
+    updateSelectedTargetVariables(self, state)
     self.log('debug', 'setSelectedTarget: ' + action.options['target'] + ' on Matrix: ' + state.matrices[matrix].label)
   }
 

@@ -47,30 +47,30 @@ export function initVariables(self: InstanceBase<MediornetConfig>, state: Medior
 
   variableDefinitions.push({
     name: 'Label of selected destination',
-    variableId: 'selected_destination',
+    variableId: 'selected_target',
   })
 
   variableDefinitions.push({
     name: 'Label of input routed to selection',
-    variableId: 'selected_source',
+    variableId: 'selected_target_source',
   })
 
-  //  updateselected.targetVariables(state, variableValues)
+  updateSelectedTargetVariables(self, state)
 
   self.setVariableDefinitions(variableDefinitions)
   self.setVariableValues(variableValues)
 }
 
-export function updateSelectedDestinationVariables(
-  state: MediornetState,
-  variableValues: CompanionVariableValues
-): void {
-  for (let i = 0; i < state.matrices.length; i++) {
-    const selectedOutput = state.getSelectedOutput(i)
-    const inputForSelectedOutput = selectedOutput ? state.getInput(selectedOutput.route, i) : undefined
+export function updateSelectedTargetVariables(self: InstanceBase<MediornetConfig>, state: MediornetState): void {
+  const selectedOutput = state.selected.matrix != -1 ? state.getSelectedOutput(state.selected.matrix) : undefined
+  const inputForSelectedOutput = selectedOutput
+    ? state.getInput(selectedOutput.route, state.selected.matrix)
+    : undefined
+  const variableValues: CompanionVariableValues = {}
 
-    variableValues['selected_destination'] = selectedOutput?.name ?? '?'
+  variableValues['selected_target'] = selectedOutput?.name ?? '?'
 
-    variableValues['selected_source'] = inputForSelectedOutput?.name ?? '?'
-  }
+  variableValues['selected_target_source'] = inputForSelectedOutput?.name ?? '?'
+
+  self.setVariableValues(variableValues)
 }
