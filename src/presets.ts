@@ -1,6 +1,5 @@
-import {combineRgb, CompanionPresetDefinitions} from '@companion-module/base'
-import {MediornetState} from "./state";
-
+import { combineRgb, CompanionPresetDefinitions } from '@companion-module/base'
+import { MediornetState } from './state'
 
 export function GetPresetsList(state: MediornetState): CompanionPresetDefinitions {
   const presets: CompanionPresetDefinitions = {}
@@ -71,12 +70,11 @@ export function GetPresetsList(state: MediornetState): CompanionPresetDefinition
     ],
   }
 
-
   for (const matrix of state.matrices) {
     for (const output of state.iterateOutputs(matrix.id)) {
-      if (output.active) {
+      if (output != undefined && output.active) {
         presets[`select_destination_${matrix.label}_${output.id}`] = {
-          category: 'Select Destination (X) ' + matrix.label,
+          category: matrix.label.toUpperCase() + ' Select Destination (X)',
           name: `Selection destination button for ${output.name}`,
           type: 'button',
           style: {
@@ -95,7 +93,7 @@ export function GetPresetsList(state: MediornetState): CompanionPresetDefinition
               options: {
                 target: output.id,
               },
-            }/*,
+            } /*,
           {
             feedbackId: 'take_tally_dest',
             options: {
@@ -123,9 +121,9 @@ export function GetPresetsList(state: MediornetState): CompanionPresetDefinition
     }
 
     for (const input of state.iterateInputs(matrix.id)) {
-      if (input.active) {
+      if (input != undefined && input.active) {
         presets[`route_source_${matrix.label}_${input.id}`] = {
-          category: 'Route Source (Y) ' + matrix.label,
+          category: matrix.label.toUpperCase() + ' Route Source (Y)',
           name: `Route ${input.name} to selected destination`,
           type: 'button',
           style: {

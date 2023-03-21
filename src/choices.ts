@@ -1,5 +1,5 @@
-import type {DropdownChoice} from '@companion-module/base'
-import type {MediornetState} from './state'
+import type { DropdownChoice } from '@companion-module/base'
+import type { MediornetState } from './state'
 
 export interface InputChoicesResult {
   inputChoices: DropdownChoice[][]
@@ -19,7 +19,7 @@ export function getInputChoices(state: MediornetState): InputChoicesResult {
     result.inputChoices[i] = []
     for (const input of state.iterateInputs(i)) {
       if (input.active) {
-        result.inputChoices[i].push({id: input.id, label: input.label})
+        result.inputChoices[i].push({ id: input.id, label: input.label })
       }
     }
   }
@@ -27,7 +27,7 @@ export function getInputChoices(state: MediornetState): InputChoicesResult {
     result.outputChoices[i] = []
     for (const output of state.iterateOutputs(i)) {
       if (output.active) {
-        result.outputChoices[i].push({id: output.id, label: output.label})
+        result.outputChoices[i].push({ id: output.id, label: output.label })
       }
     }
   }

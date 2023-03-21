@@ -1,6 +1,6 @@
-import type {CompanionVariableDefinition, CompanionVariableValues, InstanceBase} from '@companion-module/base'
-import type {MediornetConfig} from './config.js'
-import type {MediornetState} from './state.js'
+import type { CompanionVariableDefinition, CompanionVariableValues, InstanceBase } from '@companion-module/base'
+import type { MediornetConfig } from './config'
+import type { MediornetState } from './state'
 
 /**
  * Initializes all variables
@@ -39,7 +39,8 @@ export function initVariables(self: InstanceBase<MediornetConfig>, state: Medior
         variableId: `output_${state.matrices[i].label}_${output.id + 1}_input`,
       })
 
-      variableValues[`output_${state.matrices[i].label}_${output.id + 1}_input`] = state.getInput(output.route, i)?.name ?? '?'
+      variableValues[`output_${state.matrices[i].label}_${output.id + 1}_input`] =
+        state.getInput(output.route, i)?.name ?? '?'
       //}
     }
   }
@@ -54,7 +55,7 @@ export function initVariables(self: InstanceBase<MediornetConfig>, state: Medior
     variableId: 'selected_source',
   })
 
-//  updateSelectedDestinationVariables(state, variableValues)
+  //  updateselected.targetVariables(state, variableValues)
 
   self.setVariableDefinitions(variableDefinitions)
   self.setVariableValues(variableValues)

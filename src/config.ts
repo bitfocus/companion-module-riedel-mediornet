@@ -1,6 +1,5 @@
 import { Regex, SomeCompanionConfigField } from '@companion-module/base'
 
-
 export interface MediornetConfig {
   host?: string
   take?: boolean

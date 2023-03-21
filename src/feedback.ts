@@ -1,12 +1,13 @@
 import {
   CompanionFeedbackDefinition,
   CompanionFeedbackDefinitions,
-  combineRgb, InstanceBase
+  combineRgb,
+  InstanceBase,
 } from '@companion-module/base'
-import {EmberClient} from 'emberplus-connection'
-import {MediornetConfig} from "./config";
-import {matrixnames, MediornetState} from "./state";
-import {getInputChoices} from "./choices";
+import { EmberClient } from 'emberplus-connection'
+import { MediornetConfig } from './config'
+import { matrixnames, MediornetState } from './state'
+import { getInputChoices } from './choices'
 
 export enum FeedbackId {
   Take = 'take',
@@ -40,39 +41,44 @@ export function GetFeedbacksList(
   _emberClient: EmberClient,
   state: MediornetState
 ): CompanionFeedbackDefinitions {
-  const {inputChoices, outputChoices} = getInputChoices(state)
+  const { inputChoices, outputChoices } = getInputChoices(state)
   const feedbacks: { [id in FeedbackId]: CompanionFeedbackDefinition | undefined } = {
     [FeedbackId.Take]: {
       name: 'Take is possible',
       description: 'Shows if there is take possible',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         bgcolor: combineRgb(255, 255, 255),
         color: combineRgb(255, 0, 0),
       },
       options: [],
-      callback: () =>{
-        return state.selectedDestination != -1 && state.selectedSource != -1 && state.selectedMatrix != -1 && state.selectedSource != state.outputs[state.selectedMatrix][state.selectedDestination].route
-      }
+      callback: () => {
+        return (
+          state.selected.target != -1 &&
+          state.selected.source != -1 &&
+          state.selected.matrix != -1 &&
+          state.selected.source != state.outputs[state.selected.matrix][state.selected.target].route
+        )
+      },
     },
     [FeedbackId.Clear]: {
       name: 'Clear is possible',
       description: 'Changes when a selection is made.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         bgcolor: combineRgb(255, 255, 255),
         color: combineRgb(255, 0, 0),
       },
       options: [],
-      callback: () =>{
-        return state.selectedDestination != -1 || state.selectedSource != -1 || state.selectedMatrix != -1
-      }
+      callback: () => {
+        return state.selected.target != -1 || state.selected.source != -1 || state.selected.matrix != -1
+      },
     },
 
     [FeedbackId.SelectedSourceVideo]: {
       name: 'Video Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -86,16 +92,17 @@ export function GetFeedbacksList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.video]
-        }
+          choices: inputChoices[matrixnames.video],
+        },
       ],
       callback: (feedback) => {
-        return state.selectedSource == feedback.options['source'] && state.selectedMatrix == matrixnames.video;
-      }
-    },[FeedbackId.SelectedSourceAudio]: {
+        return state.selected.source == feedback.options['source'] && state.selected.matrix == matrixnames.video
+      },
+    },
+    [FeedbackId.SelectedSourceAudio]: {
       name: 'Audio Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -109,16 +116,17 @@ export function GetFeedbacksList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.audio]
-        }
+          choices: inputChoices[matrixnames.audio],
+        },
       ],
       callback: (feedback) => {
-        return state.selectedSource == feedback.options['source'] && state.selectedMatrix == matrixnames.audio;
-      }
-    },[FeedbackId.SelectedSourceData]: {
+        return state.selected.source == feedback.options['source'] && state.selected.matrix == matrixnames.audio
+      },
+    },
+    [FeedbackId.SelectedSourceData]: {
       name: 'Data Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -132,16 +140,17 @@ export function GetFeedbacksList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.data]
-        }
+          choices: inputChoices[matrixnames.data],
+        },
       ],
       callback: (feedback) => {
-        return state.selectedSource == feedback.options['source'] && state.selectedMatrix == matrixnames.data;
-      }
-    },[FeedbackId.SelectedSourceMultiChannelAudio]: {
+        return state.selected.source == feedback.options['source'] && state.selected.matrix == matrixnames.data
+      },
+    },
+    [FeedbackId.SelectedSourceMultiChannelAudio]: {
       name: 'MChAudio Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -155,16 +164,19 @@ export function GetFeedbacksList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.multichannelaudio]
-        }
+          choices: inputChoices[matrixnames.multichannelaudio],
+        },
       ],
       callback: (feedback) => {
-        return state.selectedSource == feedback.options['source'] && state.selectedMatrix == matrixnames.multichannelaudio;
-      }
-    },[FeedbackId.SelectedSourceGPIO]: {
+        return (
+          state.selected.source == feedback.options['source'] && state.selected.matrix == matrixnames.multichannelaudio
+        )
+      },
+    },
+    [FeedbackId.SelectedSourceGPIO]: {
       name: 'GPI Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -178,17 +190,17 @@ export function GetFeedbacksList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.gpio]
-        }
+          choices: inputChoices[matrixnames.gpio],
+        },
       ],
       callback: (feedback) => {
-        return state.selectedSource == feedback.options['source'] && state.selectedMatrix == matrixnames.gpio;
-      }
+        return state.selected.source == feedback.options['source'] && state.selected.matrix == matrixnames.gpio
+      },
     },
     [FeedbackId.SelectedTargetVideo]: {
       name: 'Video Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -202,17 +214,17 @@ export function GetFeedbacksList(
           id: 'target',
           default: 0,
           minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.video]
-        }
+          choices: outputChoices[matrixnames.video],
+        },
       ],
       callback: (feedback) => {
-        return (state.selectedDestination == feedback.options['target'] && state.selectedMatrix == matrixnames.video)
-      }
+        return state.selected.target == feedback.options['target'] && state.selected.matrix == matrixnames.video
+      },
     },
     [FeedbackId.SelectedTargetAudio]: {
       name: 'Audio Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -226,17 +238,17 @@ export function GetFeedbacksList(
           id: 'target',
           default: 0,
           minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.audio]
-        }
+          choices: outputChoices[matrixnames.audio],
+        },
       ],
       callback: (feedback) => {
-        return (state.selectedDestination == feedback.options['target'] && state.selectedMatrix == matrixnames.audio)
-      }
+        return state.selected.target == feedback.options['target'] && state.selected.matrix == matrixnames.audio
+      },
     },
     [FeedbackId.SelectedTargetData]: {
       name: 'Data Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -250,17 +262,17 @@ export function GetFeedbacksList(
           id: 'target',
           default: 0,
           minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.data]
-        }
+          choices: outputChoices[matrixnames.data],
+        },
       ],
       callback: (feedback) => {
-        return (state.selectedDestination == feedback.options['target'] && state.selectedMatrix == matrixnames.data)
-      }
+        return state.selected.target == feedback.options['target'] && state.selected.matrix == matrixnames.data
+      },
     },
     [FeedbackId.SelectedTargetMultiChannelAudio]: {
       name: 'MChAudio Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -274,17 +286,19 @@ export function GetFeedbacksList(
           id: 'target',
           default: 0,
           minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.multichannelaudio]
-        }
+          choices: outputChoices[matrixnames.multichannelaudio],
+        },
       ],
       callback: (feedback) => {
-        return (state.selectedDestination == feedback.options['target'] && state.selectedMatrix == matrixnames.multichannelaudio)
-      }
+        return (
+          state.selected.target == feedback.options['target'] && state.selected.matrix == matrixnames.multichannelaudio
+        )
+      },
     },
     [FeedbackId.SelectedTargetGPIO]: {
       name: 'GPO Target Background if Selected',
       description: 'Change Background of Target, when it is currently selected.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -298,17 +312,17 @@ export function GetFeedbacksList(
           id: 'target',
           default: 0,
           minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.gpio]
-        }
+          choices: outputChoices[matrixnames.gpio],
+        },
       ],
       callback: (feedback) => {
-        return (state.selectedDestination == feedback.options['target'] && state.selectedMatrix == matrixnames.gpio)
-      }
+        return state.selected.target == feedback.options['target'] && state.selected.matrix == matrixnames.gpio
+      },
     },
     [FeedbackId.TakeTallySourceVideo]: {
       name: 'Video Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -322,21 +336,24 @@ export function GetFeedbacksList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.video]
-        }
+          choices: inputChoices[matrixnames.video],
+        },
       ],
       callback: (feedback) => {
-        if (state.outputs == undefined ||
-          state.outputs[matrixnames.video][state.selectedDestination] == undefined ||
-          state.outputs[matrixnames.video][state.selectedDestination].route == undefined ||
-          state.selectedMatrix !== matrixnames.video) return false
-        return (feedback.options['source'] == state.outputs[matrixnames.video][state.selectedDestination].route)
-      }
+        if (
+          state.outputs == undefined ||
+          state.outputs[matrixnames.video][state.selected.target] == undefined ||
+          state.outputs[matrixnames.video][state.selected.target].route == undefined ||
+          state.selected.matrix !== matrixnames.video
+        )
+          return false
+        return feedback.options['source'] == state.outputs[matrixnames.video][state.selected.target].route
+      },
     },
     [FeedbackId.TakeTallySourceAudio]: {
       name: 'Audio Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -350,21 +367,24 @@ export function GetFeedbacksList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.audio]
-        }
+          choices: inputChoices[matrixnames.audio],
+        },
       ],
       callback: (feedback) => {
-        if (state.outputs == undefined ||
-          state.outputs[matrixnames.audio][state.selectedDestination] == undefined ||
-          state.outputs[matrixnames.audio][state.selectedDestination].route == undefined ||
-          state.selectedMatrix !== matrixnames.multichannelaudio) return false
-        return (feedback.options['source'] == state.outputs[matrixnames.audio][state.selectedDestination].route)
-      }
+        if (
+          state.outputs == undefined ||
+          state.outputs[matrixnames.audio][state.selected.target] == undefined ||
+          state.outputs[matrixnames.audio][state.selected.target].route == undefined ||
+          state.selected.matrix !== matrixnames.multichannelaudio
+        )
+          return false
+        return feedback.options['source'] == state.outputs[matrixnames.audio][state.selected.target].route
+      },
     },
     [FeedbackId.TakeTallySourceData]: {
       name: 'Data Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -378,21 +398,24 @@ export function GetFeedbacksList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.data]
-        }
+          choices: inputChoices[matrixnames.data],
+        },
       ],
       callback: (feedback) => {
-        if (state.outputs == undefined ||
-          state.outputs[matrixnames.data][state.selectedDestination] == undefined ||
-          state.outputs[matrixnames.data][state.selectedDestination].route == undefined ||
-          state.selectedMatrix !== matrixnames.data) return false
-        return (feedback.options['source'] == state.outputs[matrixnames.data][state.selectedDestination].route)
-      }
+        if (
+          state.outputs == undefined ||
+          state.outputs[matrixnames.data][state.selected.target] == undefined ||
+          state.outputs[matrixnames.data][state.selected.target].route == undefined ||
+          state.selected.matrix !== matrixnames.data
+        )
+          return false
+        return feedback.options['source'] == state.outputs[matrixnames.data][state.selected.target].route
+      },
     },
     [FeedbackId.TakeTallySourceMultiChannelAudio]: {
       name: 'MChAudio Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -406,21 +429,24 @@ export function GetFeedbacksList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.multichannelaudio]
-        }
+          choices: inputChoices[matrixnames.multichannelaudio],
+        },
       ],
       callback: (feedback) => {
-        if (state.outputs == undefined ||
-          state.outputs[matrixnames.multichannelaudio][state.selectedDestination] == undefined ||
-          state.outputs[matrixnames.multichannelaudio][state.selectedDestination].route == undefined ||
-          state.selectedMatrix !== matrixnames.multichannelaudio) return false
-        return (feedback.options['source'] == state.outputs[matrixnames.multichannelaudio][state.selectedDestination].route)
-      }
+        if (
+          state.outputs == undefined ||
+          state.outputs[matrixnames.multichannelaudio][state.selected.target] == undefined ||
+          state.outputs[matrixnames.multichannelaudio][state.selected.target].route == undefined ||
+          state.selected.matrix !== matrixnames.multichannelaudio
+        )
+          return false
+        return feedback.options['source'] == state.outputs[matrixnames.multichannelaudio][state.selected.target].route
+      },
     },
     [FeedbackId.TakeTallySourceGPIO]: {
       name: 'GPI Source Background if routed on selected Target',
       description: 'Change Background of Source, when it is currently routed on the selected target.',
-      type: "boolean",
+      type: 'boolean',
       defaultStyle: {
         // The default style change for a boolean feedback
         // The user will be able to customise these values as well as the fields that will be changed
@@ -434,16 +460,19 @@ export function GetFeedbacksList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.gpio]
-        }
+          choices: inputChoices[matrixnames.gpio],
+        },
       ],
       callback: (feedback) => {
-        if (state.outputs == undefined ||
-          state.outputs[matrixnames.gpio][state.selectedDestination] == undefined ||
-          state.outputs[matrixnames.gpio][state.selectedDestination].route == undefined ||
-          state.selectedMatrix !== matrixnames.gpio) return false
-        return (feedback.options['source'] == state.outputs[matrixnames.gpio][state.selectedDestination].route)
-      }
+        if (
+          state.outputs == undefined ||
+          state.outputs[matrixnames.gpio][state.selected.target] == undefined ||
+          state.outputs[matrixnames.gpio][state.selected.target].route == undefined ||
+          state.selected.matrix !== matrixnames.gpio
+        )
+          return false
+        return feedback.options['source'] == state.outputs[matrixnames.gpio][state.selected.target].route
+      },
     },
   }
 
