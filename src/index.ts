@@ -6,6 +6,7 @@ import { EmberClient } from 'emberplus-connection' // note - emberplus-conn is i
 import { MediornetState } from './state'
 import { initVariables } from './variables'
 import { GetPresetsList } from './presets'
+import * as console from 'console'
 
 /**
  * Companion instance class for Riedels Mediornet Devices
@@ -81,6 +82,8 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
       this.log('error', 'Error ' + e)
     })
     this.emberClient.on('connected', () => {
+      console.log(Promise)
+      console.log(Promise.resolve())
       Promise.resolve()
         .then(async () => {
           const request = await this.emberClient.getDirectory(this.emberClient.tree)
