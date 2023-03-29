@@ -14,6 +14,7 @@ import { updateSelectedTargetVariables } from './variables'
 export enum ActionId {
   Take = 'take',
   Clear = 'clear',
+  Undo = 'undo',
   SetSourceVideo = 'select_source_video',
   SetTargetVideo = 'select_target_video',
   SetSourceAudio = 'select_source_audio',
@@ -81,7 +82,8 @@ const doMatrixActionFunction = function (
           FeedbackId.SelectedSourceMultiChannelAudio,
           FeedbackId.SelectedSourceGPIO,
           FeedbackId.Take,
-          FeedbackId.Clear
+          FeedbackId.Clear,
+          FeedbackId.Undo
         )
         updateSelectedTargetVariables(self, state)
       })
@@ -138,9 +140,39 @@ const doClear = (self: InstanceBase<MediornetConfig>, state: MediornetState) => 
     FeedbackId.SelectedSourceMultiChannelAudio,
     FeedbackId.SelectedSourceGPIO,
     FeedbackId.Take,
-    FeedbackId.Clear
+    FeedbackId.Clear,
+    FeedbackId.Undo
   )
   updateSelectedTargetVariables(self, state)
+}
+
+const doUndo = (self: InstanceBase<MediornetConfig>, emberClient: EmberClient, state: MediornetState) => (): void => {
+  const selOut = state.outputs[state.selected.matrix][state.selected.target]
+  if (selOut.fallback[selOut.fallback.length - 2] != undefined) {
+    selOut.fallback.pop()
+    state.selected.source = selOut.fallback.pop() ?? -1
+    doTake(self,emberClient, state)
+    self.checkFeedbacks(
+      FeedbackId.SelectedTargetVideo,
+      FeedbackId.SelectedTargetAudio,
+      FeedbackId.SelectedTargetData,
+      FeedbackId.SelectedTargetMultiChannelAudio,
+      FeedbackId.SelectedTargetGPIO,
+      FeedbackId.TakeTallySourceVideo,
+      FeedbackId.TakeTallySourceAudio,
+      FeedbackId.TakeTallySourceData,
+      FeedbackId.TakeTallySourceMultiChannelAudio,
+      FeedbackId.TakeTallySourceGPIO,
+      FeedbackId.SelectedSourceVideo,
+      FeedbackId.SelectedSourceAudio,
+      FeedbackId.SelectedSourceData,
+      FeedbackId.SelectedSourceMultiChannelAudio,
+      FeedbackId.SelectedSourceGPIO,
+      FeedbackId.Take,
+      FeedbackId.Clear,
+      FeedbackId.Undo
+    )
+  }
 }
 
 /**
@@ -213,7 +245,8 @@ const setSelectedTarget =
       FeedbackId.SelectedSourceMultiChannelAudio,
       FeedbackId.SelectedSourceGPIO,
       FeedbackId.Take,
-      FeedbackId.Clear
+      FeedbackId.Clear,
+      FeedbackId.Undo
     )
     updateSelectedTargetVariables(self, state)
     self.log('debug', 'setSelectedTarget: ' + action.options['target'] + ' on Matrix: ' + state.matrices[matrix].label)
@@ -245,6 +278,11 @@ export function GetActionsList(
       name: 'Clear',
       options: [],
       callback: doClear(self, state),
+    },
+    [ActionId.Undo]: {
+      name: 'Undo',
+      options: [],
+      callback: doUndo(self, emberClient, state)
     },
     [ActionId.SetSourceVideo]: {
       name: 'Select Video Source',
