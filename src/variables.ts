@@ -13,35 +13,35 @@ export function initVariables(self: InstanceBase<MediornetConfig>, state: Medior
 
   for (let i = 0; i < state.matrices.length; i++) {
     for (const input of state.iterateInputs(i)) {
-      //if (input.status != 'None') {
-      variableDefinitions.push({
-        name: `Label of input ${state.matrices[i].label} ${input.id + 1}`,
-        variableId: `input_${state.matrices[i].label}_${input.id + 1}`,
-      })
+      if (input.active) {
+        variableDefinitions.push({
+          name: `Label of input ${state.matrices[i].label} ${input.id + 1}`,
+          variableId: `input_${state.matrices[i].label}_${input.id + 1}`,
+        })
 
-      variableValues[`input_${state.matrices[i].label}_${input.id + 1}`] = input.name
-      //}
+        variableValues[`input_${state.matrices[i].label}_${input.id + 1}`] = input.name
+      }
     }
   }
 
   for (let i = 0; i < state.matrices.length; i++) {
     for (const output of state.iterateOutputs(i)) {
-      //if (output.status != 'None') {
-      variableDefinitions.push({
-        name: `Label of output ${state.matrices[i].label} ${output.id + 1}`,
-        variableId: `output_${state.matrices[i].label}_${output.id + 1}`,
-      })
+      if (output.active) {
+        variableDefinitions.push({
+          name: `Label of output ${state.matrices[i].label} ${output.id + 1}`,
+          variableId: `output_${state.matrices[i].label}_${output.id + 1}`,
+        })
 
-      variableValues[`output_${state.matrices[i].label}_${output.id + 1}`] = output.name
+        variableValues[`output_${state.matrices[i].label}_${output.id + 1}`] = output.name
 
-      variableDefinitions.push({
-        name: `Label of input routed to ${state.matrices[i].label} output ${output.id + 1}`,
-        variableId: `output_${state.matrices[i].label}_${output.id + 1}_input`,
-      })
+        variableDefinitions.push({
+          name: `Label of input routed to ${state.matrices[i].label} output ${output.id + 1}`,
+          variableId: `output_${state.matrices[i].label}_${output.id + 1}_input`,
+        })
 
-      variableValues[`output_${state.matrices[i].label}_${output.id + 1}_input`] =
-        state.getInput(output.route, i)?.name ?? '?'
-      //}
+        variableValues[`output_${state.matrices[i].label}_${output.id + 1}_input`] =
+          state.getInput(output.route, i)?.name ?? '?'
+      }
     }
   }
 
@@ -60,7 +60,6 @@ export function initVariables(self: InstanceBase<MediornetConfig>, state: Medior
     variableId: 'selected_target_undo_source',
   })
 
-
   updateSelectedTargetVariables(self, state)
 
   self.setVariableDefinitions(variableDefinitions)
@@ -78,8 +77,10 @@ export function updateSelectedTargetVariables(self: InstanceBase<MediornetConfig
 
   variableValues['selected_target_source'] = inputForSelectedOutput?.name ?? '?'
 
-  const selOut = state.outputs[state.selected.matrix][state.selected.target]
-  variableValues['selected_target_undo_source'] = selOut.fallback[selOut.fallback.length-2] ?? '?'
+  if (state.selected.matrix != -1 && state.selected.target != -1) {
+    const selOut = state.outputs[state.selected.matrix][state.selected.target]
+    variableValues['selected_target_undo_source'] = selOut.fallback[selOut.fallback.length - 2] ?? '?'
+  }
 
   self.setVariableValues(variableValues)
 }
