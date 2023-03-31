@@ -60,7 +60,6 @@ export function initVariables(self: InstanceBase<MediornetConfig>, state: Medior
     variableId: 'selected_target_undo_source',
   })
 
-
   updateSelectedTargetVariables(self, state)
 
   self.setVariableDefinitions(variableDefinitions)
@@ -68,18 +67,28 @@ export function initVariables(self: InstanceBase<MediornetConfig>, state: Medior
 }
 
 export function updateSelectedTargetVariables(self: InstanceBase<MediornetConfig>, state: MediornetState): void {
-  const selectedOutput = state.selected.matrix != -1 ? state.getSelectedOutput(state.selected.matrix) : undefined
-  const inputForSelectedOutput = selectedOutput
-    ? state.getInput(selectedOutput.route, state.selected.matrix)
-    : undefined
   const variableValues: CompanionVariableValues = {}
+  if (state.selected.matrix != -1 && state.selected.target != -1) {
+    const selectedOutput = state.outputs[state.selected.matrix][state.selected.target]
+    const inputForSelectedOutput = selectedOutput
+      ? state.getInput(selectedOutput.route, state.selected.matrix)
+      : undefined
 
-  variableValues['selected_target'] = selectedOutput?.name ?? '?'
+    variableValues['selected_target'] = selectedOutput?.name ?? '?'
 
-  variableValues['selected_target_source'] = inputForSelectedOutput?.name ?? '?'
+    variableValues['selected_target_source'] = inputForSelectedOutput?.name ?? '?'
 
-  const selOut = state.outputs[state.selected.matrix][state.selected.target]
-  variableValues['selected_target_undo_source'] = selOut.fallback[selOut.fallback.length-2] ?? '?'
-
+    if (state.outputs[state.selected.matrix][state.selected.target].fallback.length >= 2) {
+      const selOut = state.outputs[state.selected.matrix][state.selected.target]
+      variableValues['selected_target_undo_source'] =
+        state.inputs[state.selected.matrix][selOut.fallback[selOut.fallback.length - 2]].name ?? ''
+    } else {
+      variableValues['selected_target_undo_source'] = ''
+    }
+  } else {
+    variableValues['selected_target'] = '?'
+    variableValues['selected_target_source'] = '?'
+    variableValues['selected_target_undo_source'] = ''
+  }
   self.setVariableValues(variableValues)
 }
