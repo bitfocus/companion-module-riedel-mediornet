@@ -70,6 +70,39 @@ export function GetPresetsList(state: MediornetState): CompanionPresetDefinition
     ],
   }
 
+  presets['undo'] = {
+    category: 'Actions\n(XY only)',
+    name: 'Undo',
+    type: 'button',
+    style: {
+      text: 'Undo\n$(mediornet:selected_target_undo_source)',
+      size: '18',
+      color: combineRgb(0, 0, 255),
+      bgcolor: combineRgb(0, 0, 0),
+    },
+    feedbacks: [
+      {
+        feedbackId: 'undo',
+        style: {
+          bgcolor: combineRgb(0, 0, 255),
+          color: combineRgb(0, 0, 0),
+        },
+        options: {},
+      },
+    ],
+    steps: [
+      {
+        down: [
+          {
+            actionId: 'undo',
+            options: {},
+          },
+        ],
+        up: [],
+      },
+    ],
+  }
+
   for (const matrix of state.matrices) {
     for (const output of state.iterateOutputs(matrix.id)) {
       if (output != undefined && output.active) {

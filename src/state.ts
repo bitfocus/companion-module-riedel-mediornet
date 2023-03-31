@@ -302,7 +302,8 @@ export class MediornetState {
                       FeedbackId.TakeTallySourceAudio,
                       FeedbackId.TakeTallySourceData,
                       FeedbackId.TakeTallySourceMultiChannelAudio,
-                      FeedbackId.TakeTallySourceGPIO
+                      FeedbackId.TakeTallySourceGPIO,
+                      FeedbackId.Undo
                     )
                   } //if state.output.. undefined
                 } // if sources != undefined

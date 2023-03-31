@@ -12,6 +12,7 @@ import { getInputChoices } from './choices'
 export enum FeedbackId {
   Take = 'take',
   Clear = 'clear',
+  Undo = 'undo',
   SelectedSourceVideo = 'selected_source_video',
   SelectedSourceAudio = 'selected_source_audio',
   SelectedSourceData = 'selected_source_data',
@@ -74,7 +75,22 @@ export function GetFeedbacksList(
         return state.selected.target != -1 || state.selected.source != -1 || state.selected.matrix != -1
       },
     },
-
+    [FeedbackId.Undo]: {
+      name: 'True if undo possible',
+      description: 'Changes Style if undo is possible on current target',
+      type: 'boolean',
+      defaultStyle: {
+        bgcolor: combineRgb(0, 0, 255),
+        color: combineRgb(0, 0, 0),
+      },
+      options: [],
+      callback: () => {
+        if (state.selected.matrix != -1 && state.selected.target != -1) {
+          const selOut = state.outputs[state.selected.matrix][state.selected.target]
+          return selOut.fallback[selOut.fallback.length - 2] != undefined
+        } else return false
+      },
+    },
     [FeedbackId.SelectedSourceVideo]: {
       name: 'Video Source Background If Selected',
       description: 'Change Background of Source, when it is currently selected.',
