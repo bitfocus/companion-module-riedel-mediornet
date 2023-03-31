@@ -151,7 +151,7 @@ const doUndo = (self: InstanceBase<MediornetConfig>, emberClient: EmberClient, s
   if (selOut.fallback[selOut.fallback.length - 2] != undefined) {
     selOut.fallback.pop()
     state.selected.source = selOut.fallback.pop() ?? -1
-    doTake(self,emberClient, state)
+    doMatrixActionFunction(self, emberClient, state)
     self.checkFeedbacks(
       FeedbackId.SelectedTargetVideo,
       FeedbackId.SelectedTargetAudio,
@@ -282,7 +282,7 @@ export function GetActionsList(
     [ActionId.Undo]: {
       name: 'Undo',
       options: [],
-      callback: doUndo(self, emberClient, state)
+      callback: doUndo(self, emberClient, state),
     },
     [ActionId.SetSourceVideo]: {
       name: 'Select Video Source',
