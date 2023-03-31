@@ -85,9 +85,11 @@ export function GetFeedbacksList(
       },
       options: [],
       callback: () => {
-        const selOut = state.outputs[state.selected.matrix][state.selected.target]
-        return selOut.fallback[selOut.fallback.length-2] != undefined
-      }
+        if (state.selected.matrix != -1 && state.selected.target != -1) {
+          const selOut = state.outputs[state.selected.matrix][state.selected.target]
+          return selOut.fallback[selOut.fallback.length - 2] != undefined
+        } else return false
+      },
     },
     [FeedbackId.SelectedSourceVideo]: {
       name: 'Video Source Background If Selected',
