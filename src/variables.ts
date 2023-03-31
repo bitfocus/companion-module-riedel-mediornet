@@ -55,11 +55,6 @@ export function initVariables(self: InstanceBase<MediornetConfig>, state: Medior
     variableId: 'selected_target_source',
   })
 
-  variableDefinitions.push({
-    name: 'Label of undo source',
-    variableId: 'selected_target_undo_source',
-  })
-
   updateSelectedTargetVariables(self, state)
 
   self.setVariableDefinitions(variableDefinitions)
@@ -76,11 +71,6 @@ export function updateSelectedTargetVariables(self: InstanceBase<MediornetConfig
   variableValues['selected_target'] = selectedOutput?.name ?? '?'
 
   variableValues['selected_target_source'] = inputForSelectedOutput?.name ?? '?'
-
-  if (state.selected.matrix != -1 && state.selected.target != -1) {
-    const selOut = state.outputs[state.selected.matrix][state.selected.target]
-    variableValues['selected_target_undo_source'] = selOut.fallback[selOut.fallback.length - 2] ?? '?'
-  }
 
   self.setVariableValues(variableValues)
 }
