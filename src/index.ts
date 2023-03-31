@@ -24,7 +24,7 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
     this.state = new MediornetState(this)
 
     this.state.updateCounts(this.config)
-    await this.setupEmberConnection()
+    void this.setupEmberConnection()
   }
 
   /**
@@ -99,7 +99,7 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
     })
     await this.emberClient.connect().catch((e) => {
       this.updateStatus(InstanceStatus.ConnectionFailure)
-      this.log('error', 'Error ' + e)
+      this.log('error', e)
     })
     this.updateCompanionBits()
   }
