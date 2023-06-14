@@ -1,3 +1,4 @@
+
 # companion-module-riedel-mediornet
 This Module establishes an connection with Mediornet Devices from Riedel such es (Mediornet Compact, Modular or microN).
 You must have EmBER+ enabled in the 3rd Party Interfaces. Later select the IP-Address of the master device.
@@ -37,3 +38,4 @@ This value is internally overwritten, when a connection is established.
 - [ ] Implement Colorbar activation
 - [ ] make Feedback- and Actionlist shorter and add matrix in those fields instead (needs companion support)
 - [ ] enable interaction with Mediornet Timers
+- [ ] lock state of destinations
