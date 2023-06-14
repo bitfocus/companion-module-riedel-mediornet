@@ -5,6 +5,7 @@ You must have EmBER+ enabled in the 3rd Party Interfaces. Later select the IP-Ad
 For further information download the 3rd Party Interfaces manual from the Riedel website (restricted access for users).
 
 This Plugin supports Mediorworks Verision 7.3.1.
+Version 7.4.0 does not work properly yet with this module.
 ## Getting started
 
 Execute `yarn` command to install the dependencies.
