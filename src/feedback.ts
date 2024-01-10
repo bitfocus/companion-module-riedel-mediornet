@@ -4,10 +4,10 @@ import {
   combineRgb,
   InstanceBase,
 } from '@companion-module/base'
-import { EmberClient } from 'emberplus-connection'
 import { MediornetConfig } from './config'
 import { matrixnames, MediornetState } from './state'
 import { getInputChoices } from './choices'
+import { EmberClient } from 'node-emberplus/lib/client/ember-client'
 
 export enum FeedbackId {
   Take = 'take',
@@ -37,6 +37,7 @@ export enum FeedbackId {
  * @param state reference to the state of the module
  * @constructor
  */
+//TODO: Add feedback where the source of each Target is represented
 export function GetFeedbacksList(
   _self: InstanceBase<MediornetConfig>,
   _emberClient: EmberClient,

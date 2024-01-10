@@ -1,12 +1,9 @@
 import { MediornetConfig } from './config'
 import { MediornetInstance } from './index'
-import { FieldFlags } from 'emberplus-connection/dist/model/Command'
-import { EmberClient } from 'emberplus-connection'
-import * as console from 'console'
-import { NumberedTreeNodeImpl, ParameterImpl } from 'emberplus-connection/dist/model'
-import { CompanionVariableValues } from '@companion-module/base'
-import { FeedbackId } from './feedback'
-import { RootElement } from 'emberplus-connection/dist/types'
+import { QualifiedMatrix } from 'node-emberplus/lib/common/matrix/qualified-matrix'
+import { QualifiedNode } from 'node-emberplus/lib/common/qualified-node'
+import { EmberClient } from 'node-emberplus/lib/client/ember-client'
+import { QualifiedParameter } from 'node-emberplus/lib/common/qualified-parameter'
 
 export enum matrixnames {
   video,
@@ -26,6 +23,8 @@ export interface Matrix {
   id: number
   label: string
   path: string
+  inputs: InputState[]
+  outputs: OutputState[]
 }
 
 export interface CurrentSelected {
@@ -39,17 +38,16 @@ export interface InputState {
   label: string
   name: string
   active: boolean
-  // lock: string // TODO - type better?
+  lock: boolean
 }
 
 export interface OutputState {
   id: number
-  index: number
   label: string
   name: string
   route: number
   active: boolean
-  // lock: string // TODO - type better?
+  lock: boolean
   fallback: number[]
   //type: 'primary' | 'monitor'
 }
@@ -73,11 +71,11 @@ export class MediornetState {
     this.inputs = []
     this.outputs = []
     this.matrices = [
-      { id: 0, label: 'video', path: videoPath },
-      { id: 1, label: 'audio', path: audioPath },
-      { id: 2, label: 'data', path: dataPath },
-      { id: 3, label: 'multichannelaudio', path: multiChannelAudioPath },
-      { id: 4, label: 'gpio', path: gpioPath },
+      { id: 0, label: 'video', path: videoPath, inputs: [], outputs: []  },
+      { id: 1, label: 'audio', path: audioPath, inputs: [], outputs: []  },
+      { id: 2, label: 'data', path: dataPath, inputs: [], outputs: []  },
+      { id: 3, label: 'multichannelaudio', path: multiChannelAudioPath, inputs: [], outputs: []  },
+      { id: 4, label: 'gpio', path: gpioPath, inputs: [], outputs: []  },
     ]
 
     for (let i = 0; i < this.matrices.length; i++) {
@@ -91,27 +89,27 @@ export class MediornetState {
     const outputCount = config.outputCountString.split(',').map(Number)
 
     for (let i = 0; i < this.matrices.length; i++) {
-      for (let id = this.inputs[i].length; id < inputCount[i]; id++) {
-        this.inputs[i].push({
-          id,
-          label: `${id + 1}: Input ${id + 1}`,
-          name: `Input ${id + 1}`,
+      for (let id = this.matrices[i].inputs.length; id < inputCount[i]; id++) {
+        this.matrices[i].inputs.push({
+          id: id,
+          label: `Input ${id}`,
+          name: `Input ${id}`,
           active: true,
-          // lock: 'U',
+          lock: false,
         })
       }
     }
     for (let i = 0; i < this.matrices.length; i++) {
-      this.outputs[i] = this.outputs[i].slice(0, outputCount[i])
-      for (let id = this.outputs[i].length; id < outputCount[i]; id++) {
-        this.outputs[i].push({
-          id,
-          index: id,
-          label: `${id + 1}: Output ${id + 1}`,
-          name: `Output ${id + 1}`,
+      this.matrices[i].outputs = this.matrices[i].outputs.slice(0, outputCount[i])
+      for (let id = this.matrices[i].outputs.length; id < outputCount[i]; id++) {
+        this.matrices[i].outputs.push({
+          id: id,
+          label: `Output ${id}`,
+          name: `Output ${id}`,
           active: true,
-          route: 1001,
+          route: 0,
           fallback: [],
+          lock: false,
         })
       }
     }
@@ -125,7 +123,7 @@ export class MediornetState {
    * @returns the desired input object
    */
   public getInput(id: number, matrix: number): InputState | undefined {
-    return this.inputs[matrix][id]
+    return this.matrices[matrix].inputs[id]
   }
 
   /**
@@ -136,7 +134,7 @@ export class MediornetState {
    * @returns the desired output object
    */
   public getOutputById(id: number, matrix: number): OutputState | undefined {
-    return this.outputs[matrix][id]
+    return this.matrices[matrix].outputs[id]
   }
 
   /**
@@ -154,7 +152,7 @@ export class MediornetState {
    * @param matrix the matrix which inputs are wanted
    */
   public iterateInputs(matrix: number): InputState[] {
-    return this.inputs[matrix]
+    return this.matrices[matrix].inputs
   }
 
   /**
@@ -162,7 +160,7 @@ export class MediornetState {
    * @param matrix the matrix which outputs are wanted
    */
   public iterateOutputs(matrix: number): OutputState[] {
-    return this.outputs[matrix]
+    return this.matrices[matrix].outputs
   }
 
   /**
@@ -174,72 +172,59 @@ export class MediornetState {
    * @param emberClient reference to the emberClient
    */
   async getLabels(labelPath: string, matrix: Matrix, emberClient: EmberClient): Promise<void> {
+    //this.self.log('debug', labelPath + matrix + emberClient)
     //get labelParentNode
-    const labelParentNode = await emberClient
-      .getElementByPath(labelPath)
-      .then(async (tempNode) => {
-        if (tempNode != undefined) {
-          // get Directory for labelParentNode and give callback function for updates
-          return (await emberClient.getDirectory(tempNode, FieldFlags.All)).response
-        } else return undefined
+
+    let labelNode = await emberClient
+      .getElementByPathAsync(labelPath)
+      .then((tempNode) => {
+        return tempNode
       })
-      .catch((error) => console.log(labelPath + ': Node does not exist. There are no labels for matrix: ') + error)
+      .catch((error) => {
+        this.self.log('error', labelPath + ': Node does not exist. There are no labels for matrix: ' + error)
+        return null
+      })
 
-    if (labelParentNode != undefined) {
-      let inOutLabel: string
-      let inOutList: OutputState[] | InputState[]
-      if (labelParentNode.contents.identifier == 'targets') {
-        inOutLabel = 'output'
-        inOutList = this.outputs[matrix.id]
-      } else if (labelParentNode.contents.identifier == 'sources') {
-        inOutLabel = 'input'
-        inOutList = this.inputs[matrix.id]
-      } else return
-      if (labelParentNode.children != undefined) {
-        const variableValues: CompanionVariableValues = {}
-        let i = 0
-        for (const nodeKey of labelParentNode['children'] as any[]) {
-          if (nodeKey != undefined && nodeKey['path']) {
-            await emberClient
-              .getElementByPath(nodeKey['path'])
-              .then(async (newlableNode) => {
-                if (newlableNode != undefined) {
-                  await emberClient.subscribe(newlableNode, (update) => {
-                    const castupdate = update as NumberedTreeNodeImpl<ParameterImpl>
-                    const variableValues: CompanionVariableValues = {}
-                    inOutList[castupdate.number].name = String(castupdate['contents']['value'])
-                    inOutList[castupdate.number].label = `${castupdate.number + 1}: ${String(
-                      castupdate['contents']['value']
-                    )}`
-                    variableValues[`${inOutLabel}_${matrix.label}_${inOutList[castupdate.number].id + 1}`] =
-                      inOutList[castupdate.number].name
-                    this.self.setVariableValues(variableValues)
-                    this.self.updateCompanionBits()
-                  })
-                }
-                const castLabelNode = newlableNode as NumberedTreeNodeImpl<ParameterImpl>
-                inOutList[castLabelNode.number].name = String(castLabelNode['contents']['value'])
-                inOutList[castLabelNode.number].label = `${castLabelNode.number + 1}: ${String(
-                  castLabelNode['contents']['value']
-                )}`
-                variableValues[`${inOutLabel}_${matrix.label}_${inOutList[castLabelNode.number].id + 1}`] =
-                  inOutList[castLabelNode.number].name
-              })
-              .catch((error) => console.log(error))
-          } else {
-            inOutList[i].active = false
-          }
-          i++
+    let labelTarget: InputState[] | OutputState[]
+    //let labelTargetGroup: string
+    if (labelNode?.identifier == 'targets') {
+      labelTarget = matrix.outputs
+      //labelTargetGroup = 'Output'
+    } else {
+      labelTarget = matrix.inputs
+      //labelTargetGroup = 'Input'
+    }
+
+    //const variableValues: CompanionVariableValues = {}
+    let i = 0
+    labelNode?.elements.forEach((object, key) => {
+      if (object instanceof QualifiedParameter && key != undefined) {
+        key = key as number
+        labelTarget[i].id = key
+        if (typeof object.identifier == 'string' && typeof object.value == 'string') {
+          labelTarget[i].name = object.identifier
+          labelTarget[i].label = object.value
         }
-
-        this.self.setVariableValues(variableValues)
-        this.self.updateCompanionBits()
-      } else {
-        inOutList.forEach((value) => {
-          value.active = false
+        /*
+          variableValues[`${labelTargetGroup}_${matrix.label}_${labelTarget[i].id}`] =
+            labelTarget[i].label
+           */
+        emberClient.getElementByPathAsync(object.path, (update) => {
+          if (update instanceof QualifiedParameter) {
+            labelTarget[update.path.split('.').pop() as unknown as number].label = update.value as string
+            /*const variableValuesnew: CompanionVariableValues = {}
+              variableValuesnew[`${labelTargetGroup}_${matrix.label}_${labelTarget[i].id}`] =
+                labelTarget[i].label
+              this.self.setVariableValues(variableValuesnew)
+               */
+            this.self.updateCompanionBits() //TODO: use setVariableValues due to cost
+          }
         })
       }
-    }
+      i++
+    })
+    //this.self.setVariableValues(variableValues)
+    this.self.updateCompanionBits() //TODO: use setVariableValues due to cost
   }
 
   /**
@@ -247,86 +232,77 @@ export class MediornetState {
    * Callbacks are given for wanted updates.
    */
   public async subscribeMediornet(): Promise<void> {
-    // MATRIX --------------
-    if (this.self.emberClient.connected) {
-      const updatedConfig: MediornetConfig = {
-        inputCountString: '',
-        outputCountString: '',
-      }
+    if (this.self.emberClient.isConnected()) {
+      this.self.log('debug', 'is connected!!!')
       const inputs = this.self.config.inputCountString.split(',')
       const outputs = this.self.config.outputCountString.split(',')
+
+      //MATRIX ----------------
+      // Iterate init Process for each matrix
       for (let i = 0; i < this.matrices.length; i++) {
-        // for every matrix the module is subscribing to connections, labels and the corresponding updates
         const matrix = this.matrices[i]
         const matrixNode = await this.self.emberClient
-          .getElementByPath(matrix.path)
+          .getElementByPathAsync(matrix.path)
           .then(async (node) => {
             return node
           })
           .catch((err) => this.self.log('error', matrix.path + ': Node does not exist. There is no matrix. ' + err))
 
-        if (
-          matrixNode != undefined &&
-          'labels' in matrixNode.contents &&
-          matrixNode['contents']['labels'] != undefined
-        ) {
-          const labelPath = matrixNode['contents']['labels'][0]['basePath']
-          const labelNode = await this.self.emberClient
-            .getElementByPath(labelPath)
-            .then(async (node) => {
-              if (node != undefined) return (await this.self.emberClient.getDirectory(node)).response
-              else return undefined
-            })
-            .catch(() =>
-              console.log(labelPath + ': Node does not exist. There are no labels for matrix: ' + matrix.path)
-            )
-
-          //Update counts of matrix, that it matches the needed number for the coming lables
-          inputs[i] = matrixNode.contents.sourceCount != undefined ? String(matrixNode.contents.sourceCount) : '0'
-          outputs[i] = matrixNode.contents.targetCount != undefined ? String(matrixNode.contents.targetCount) : '0'
-          updatedConfig.inputCountString = this.self.config.inputCountString = inputs.join(',')
-          updatedConfig.outputCountString = this.self.config.outputCountString = outputs.join(',')
-          this.updateCounts(this.self.config)
+        //check Node for properties of a matrixNode
+        if (matrixNode instanceof QualifiedMatrix) {
+          //Update Counts
+          inputs[i] = matrixNode.sourceCount != undefined ? String(matrixNode.contents.sourceCount) : '0'
+          outputs[i] = matrixNode.targetCount != undefined ? String(matrixNode.contents.targetCount) : '0'
+          this.self.config.inputCountString = inputs.join(',')
+          this.self.config.outputCountString = outputs.join(',')
+          this.self.saveConfig(this.self.config)
 
           //Set callback for matrix to update internal matrix connection infos
-          await this.self.emberClient.getDirectory(matrixNode, FieldFlags.All, (matrixUpdate) => {
-            if ('connections' in matrixUpdate['contents'] && matrixUpdate['contents']['connections'] != undefined) {
-              for (const key in matrixUpdate.contents.connections) {
-                const sources = matrixUpdate.contents.connections[key].sources
+          await this.self.emberClient.getDirectoryAsync(matrixNode, (matrixUpdate) => {
+            if (matrixUpdate instanceof QualifiedMatrix && matrixUpdate.connections != null) {
+              for (const key in matrixUpdate.connections) {
+                const sources = matrixUpdate.connections[key].sources
                 if (sources != undefined) {
-                  if (this.outputs[matrix.id][key] != undefined) {
-                    this.outputs[matrix.id][key].route = sources[0]
-                    this.outputs[matrix.id][key].fallback.push(sources[0])
-                    this.self.checkFeedbacks(
+                  if (this.matrices[matrix.id].outputs[key] != undefined) {
+                    this.matrices[matrix.id].outputs[key].route = sources[0]
+                    this.matrices[matrix.id].outputs[key].fallback.push(sources[0])
+                    /*this.self.checkFeedbacks(
                       FeedbackId.TakeTallySourceVideo,
                       FeedbackId.TakeTallySourceAudio,
-                      FeedbackId.TakeTallySourceData,
-                      FeedbackId.TakeTallySourceMultiChannelAudio,
-                      FeedbackId.TakeTallySourceGPIO,
+                      FeedbackId.TakeTallySourceVideoQuad,
+                      FeedbackId.TakeTallySourceAudioQuad,
                       FeedbackId.Undo
                     )
+                     */
                   } //if state.output.. undefined
                 } // if sources != undefined
               } //for key in matrix.connections
             } //if 'connections' in matrixUpdate
           }) // end getDirectory
-          if (labelNode != undefined) {
-            const labelNodeCast = labelNode as RootElement
-            for (const key in labelNodeCast['children']) {
-              const keyCast = Number(key)
-              const node = labelNodeCast.children[keyCast]
-              if ('identifier' in node.contents && 'path' in node && typeof node['path'] == 'string') {
-                console.log('Got labels on ' + matrix.label + ' for ' + node.contents.identifier)
-                if (node.contents.identifier == 'targets') {
-                  await this.getLabels(node.path, matrix, this.self.emberClient)
-                } else if (node.contents.identifier == 'sources') {
-                  await this.getLabels(node.path, matrix, this.self.emberClient)
-                } // else if
-              } // if 'identifier in ...
+
+          //Recieve Labels
+          if (matrixNode.labels != null) {
+            const labelPath = matrixNode.labels[0].basePath
+            const labelNode = await this.self.emberClient
+              .getElementByPathAsync(labelPath)
+              .then(async (node) => {
+                if (node != undefined) return await this.self.emberClient.getDirectoryAsync(node)
+                else return undefined
+              })
+              .catch(() =>
+                console.log(labelPath + ': Node does not exist. There are no labels for matrix: ' + matrix.path)
+              )
+            if (labelNode?.hasChildren()) {
+              labelNode?.elements.forEach((child) => {
+                if (child instanceof QualifiedNode) {
+                  //this.self.log('debug', JSON.stringify(child))
+                  this.getLabels(child.path, matrix, this.self.emberClient)
+                }
+              })
             } // for key in labelNodeCast
           } // if labelNode is undefined
-        } // if matrixNode is undefined
-      } // for matrix in matrices
-    } // if emberclient.connected
+        }
+      }
+    }
   }
 }
