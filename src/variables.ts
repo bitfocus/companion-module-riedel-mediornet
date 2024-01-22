@@ -12,52 +12,54 @@ export function initVariables(self: InstanceBase<MediornetConfig>, state: Medior
   const variableValues: CompanionVariableValues = {}
 
   for (let i = 0; i < state.matrices.length; i++) {
-    for (const input of state.iterateInputs(i)) {
-      if (input.active) {
-        variableDefinitions.push({
-          name: `Label of input ${state.matrices[i].label} ${input.id + 1}`,
-          variableId: `input_${state.matrices[i].label}_${input.id + 1}`,
-        })
+    state.iterateInputs(i).forEach((input, key) => {
+        if (input.active) {
+          variableDefinitions.push({
+            name: `Label of input ${state.matrices[i].label} ${key + 1}`,
+            variableId: `input_${state.matrices[i].label}_${key + 1}`
+          })
 
-        variableValues[`input_${state.matrices[i].label}_${input.id + 1}`] = input.name
+          variableValues[`input_${state.matrices[i].label}_${key + 1}`] = input.label
+        }
       }
-    }
+    )
   }
 
   for (let i = 0; i < state.matrices.length; i++) {
-    for (const output of state.iterateOutputs(i)) {
-      if (output.active) {
-        variableDefinitions.push({
-          name: `Label of output ${state.matrices[i].label} ${output.id + 1}`,
-          variableId: `output_${state.matrices[i].label}_${output.id + 1}`,
-        })
+    state.iterateOutputs(i).forEach((output, key) => {
+        if (output.active) {
+          variableDefinitions.push({
+            name: `Label of output ${state.matrices[i].label} ${key + 1}`,
+            variableId: `output_${state.matrices[i].label}_${key + 1}`
+          })
 
-        variableValues[`output_${state.matrices[i].label}_${output.id + 1}`] = output.name
+          variableValues[`output_${state.matrices[i].label}_${key + 1}`] = output.label
 
-        variableDefinitions.push({
-          name: `Label of input routed to ${state.matrices[i].label} output ${output.id + 1}`,
-          variableId: `output_${state.matrices[i].label}_${output.id + 1}_input`,
-        })
+          variableDefinitions.push({
+            name: `Label of input routed to ${state.matrices[i].label} output ${key + 1}`,
+            variableId: `output_${state.matrices[i].label}_${key + 1}_input`
+          })
 
-        variableValues[`output_${state.matrices[i].label}_${output.id + 1}_input`] =
-          state.getInput(output.route, i)?.name ?? '?'
+          variableValues[`output_${state.matrices[i].label}_${key + 1}_input`] =
+            state.getInput(output.route, i)?.label ?? '?'
+        }
       }
-    }
+    )
   }
 
   variableDefinitions.push({
     name: 'Label of selected destination',
-    variableId: 'selected_target',
+    variableId: 'selected_target'
   })
 
   variableDefinitions.push({
     name: 'Label of input routed to selection',
-    variableId: 'selected_target_source',
+    variableId: 'selected_target_source'
   })
 
   variableDefinitions.push({
     name: 'Label of undo source',
-    variableId: 'selected_target_undo_source',
+    variableId: 'selected_target_undo_source'
   })
 
   updateSelectedTargetVariables(self, state)
@@ -69,19 +71,19 @@ export function initVariables(self: InstanceBase<MediornetConfig>, state: Medior
 export function updateSelectedTargetVariables(self: InstanceBase<MediornetConfig>, state: MediornetState): void {
   const variableValues: CompanionVariableValues = {}
   if (state.selected.matrix != -1 && state.selected.target != -1) {
-    const selectedOutput = state.outputs[state.selected.matrix][state.selected.target]
+    const selectedOutput = state.matrices[state.selected.matrix].outputs.get(state.selected.target)
     const inputForSelectedOutput = selectedOutput
       ? state.getInput(selectedOutput.route, state.selected.matrix)
       : undefined
 
-    variableValues['selected_target'] = selectedOutput?.name ?? '?'
+    variableValues['selected_target'] = selectedOutput?.label ?? '?'
 
-    variableValues['selected_target_source'] = inputForSelectedOutput?.name ?? '?'
-
-    if (state.outputs[state.selected.matrix][state.selected.target].fallback.length >= 2) {
-      const selOut = state.outputs[state.selected.matrix][state.selected.target]
-      variableValues['selected_target_undo_source'] =
-        state.inputs[state.selected.matrix][selOut.fallback[selOut.fallback.length - 2]].name ?? ''
+    variableValues['selected_target_source'] = inputForSelectedOutput?.label ?? '?'
+    let fallback_length = state.matrices[state.selected.matrix].outputs.get(state.selected.target)?.fallback.length
+    if (fallback_length != undefined && fallback_length >= 2) {
+      const selOut = state.matrices[state.selected.matrix].outputs.get(state.selected.target)
+      if (selOut != undefined) variableValues['selected_target_undo_source'] =
+        state.matrices[state.selected.matrix].inputs.get(selOut.fallback[selOut.fallback.length - 2])?.label ?? ''
     } else {
       variableValues['selected_target_undo_source'] = ''
     }

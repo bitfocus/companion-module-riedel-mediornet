@@ -3,6 +3,7 @@ import { Regex, SomeCompanionConfigField } from '@companion-module/base'
 export interface MediornetConfig {
   host?: string
   take?: boolean
+  take_reset?: boolean
   inputCountString: string
   outputCountString: string
 }
@@ -25,6 +26,13 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
       type: 'checkbox',
       id: 'take',
       label: 'Enable Take? (XY only)',
+      width: 6,
+      default: false,
+    },
+    {
+      type: 'checkbox',
+      id: 'take_reset',
+      label: 'Reset Source and Target after Take',
       width: 6,
       default: false,
     },

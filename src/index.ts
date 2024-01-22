@@ -2,10 +2,10 @@ import { InstanceBase, InstanceStatus, runEntrypoint, SomeCompanionConfigField }
 import { GetActionsList } from './actions'
 import { GetConfigFields, MediornetConfig } from './config'
 import { GetFeedbacksList } from './feedback'
-import { EmberClient } from 'emberplus-connection' // note - emberplus-conn is in parent repo, not sure if it needs to be defined as dependency
 import { MediornetState } from './state'
 import { initVariables } from './variables'
 import { GetPresetsList } from './presets'
+import { EmberClient } from 'node-emberplus/lib/client/ember-client'
 
 /**
  * Companion instance class for Riedels Mediornet Devices
@@ -23,7 +23,7 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
     this.config = config
     this.state = new MediornetState(this)
 
-    this.state.updateCounts(this.config)
+    //this.state.updateOfflineMatrix(this.config)
     void this.setupEmberConnection()
   }
 
@@ -33,8 +33,7 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
   public async configUpdated(config: MediornetConfig): Promise<void> {
     this.config = config
 
-    this.emberClient.discard()
-    this.emberClient.removeAllListeners()
+    await this.emberClient.disconnectAsync()
 
     await this.setupEmberConnection()
   }
@@ -50,7 +49,7 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
    * Clean up the instance before it is destroyed.
    */
   public async destroy(): Promise<void> {
-    this.emberClient.discard()
+    await this.emberClient.disconnectAsync()
   }
 
   /**
@@ -58,7 +57,7 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
    * Initializes all Variables.
    */
   public updateCompanionBits(): void {
-    this.state.updateCounts(this.config)
+    //this.state.updateOfflineMatrix(this.config)
     this.setActionDefinitions(GetActionsList(this, this.emberClient, this.config, this.state))
     this.setFeedbackDefinitions(GetFeedbacksList(this, this.emberClient, this.state))
     this.setPresetDefinitions(GetPresetsList(this.state))
@@ -76,15 +75,14 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
     this.log('debug', 'connecting ' + (this.config.host || '') + ':' + 9000)
     this.updateStatus(InstanceStatus.Connecting)
 
-    this.emberClient = new EmberClient(this.config.host || '', 9000, 10000)
-    this.emberClient.on('error', (e) => {
+    this.emberClient = new EmberClient({ host: this.config.host || '', port: 9000 })
+    this.emberClient.on('error', (e: string) => {
       this.log('error', 'Error ' + e)
     })
     this.emberClient.on('connected', () => {
       Promise.resolve()
         .then(async () => {
-          const request = await this.emberClient.getDirectory(this.emberClient.tree)
-          await request.response
+          this.log('debug', 'connected to ' + (this.config.host || '') + ':' + 9000)
           await this.state.subscribeMediornet()
           this.updateCompanionBits()
         })
@@ -97,7 +95,9 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
     this.emberClient.on('disconnected', () => {
       this.updateStatus(InstanceStatus.Connecting)
     })
-    await this.emberClient.connect().catch((e) => {
+    await this.emberClient.connectAsync().then(async () => {
+      await this.emberClient.getDirectoryAsync()
+    } ).catch((e) => {
       this.updateStatus(InstanceStatus.ConnectionFailure)
       this.log('error', e)
     })

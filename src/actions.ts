@@ -2,14 +2,15 @@ import {
   CompanionActionDefinition,
   CompanionActionDefinitions,
   CompanionActionEvent,
-  InstanceBase,
+  InstanceBase
 } from '@companion-module/base'
-import { EmberClient, Model as EmberModel } from 'emberplus-connection'
 import { MediornetConfig } from './config'
 import { FeedbackId } from './feedback'
 import { matrixnames, MediornetState } from './state'
 import { getInputChoices } from './choices'
 import { updateSelectedTargetVariables } from './variables'
+import { EmberClient } from 'node-emberplus/lib/client/ember-client'
+import { QualifiedMatrix } from 'node-emberplus/lib/common/matrix/qualified-matrix'
 
 export enum ActionId {
   Take = 'take',
@@ -31,62 +32,73 @@ export enum ActionId {
  * Performes a connection on a specified matrix.
  * @param self reference to the BaseInstance
  * @param emberClient reference to the emberClient
+ * @param config reference to the config of the module
  * @param state reference to the state of the module
  */
-const doMatrixActionFunction = function (
+const doMatrixActionFunction = function(
   self: InstanceBase<MediornetConfig>,
   emberClient: EmberClient,
+  config: MediornetConfig,
   state: MediornetState
 ) {
   if (state.selected.source !== -1 && state.selected.target !== -1 && state.selected.matrix !== -1) {
-    self.log('debug', 'Get node ' + state.matrices[state.selected.matrix].label + ' matrix')
-    emberClient
-      .getElementByPath(state.matrices[state.selected.matrix].path)
-      .then((node) => {
-        if (node && node.contents.type === EmberModel.ElementType.Matrix) {
-          self.log('debug', 'Got node on ' + state.matrices[state.selected.matrix].label)
-          const target = state.selected.target
-          const sources = [state.selected.source]
-          emberClient
-            .matrixConnect(node as EmberModel.NumberedTreeNode<EmberModel.Matrix>, target, sources)
-            .then((r) => self.log('debug', 'send ok: ' + String(r.sentOk)))
-            .catch((r) => self.log('debug', r))
-        } else {
-          self.log(
-            'warn',
-            'Matrix ' +
+    if (state.selected.source !== -1 && state.selected.target !== -1 && state.selected.matrix !== -1) {
+      self.log('debug', 'Get node ' + state.matrices[state.selected.matrix].label + ' matrix')
+      emberClient
+        .getElementByPathAsync(state.matrices[state.selected.matrix].path)
+        .then((node) => {
+          if (node && node instanceof QualifiedMatrix) {
+            self.log('debug', 'Got node on ' + state.matrices[state.selected.matrix].label)
+            const target = state.selected.target
+            const sources = [state.selected.source]
+            emberClient
+              .matrixConnectAsync(node, target, sources)
+              .then(() => self.log('debug', 'send ok: '))
+              .catch((r) => self.log('debug', r))
+          } else {
+            self.log(
+              'warn',
+              'Matrix ' +
               state.matrices[state.selected.matrix].label +
               ' on ' +
               state.matrices[state.selected.matrix].path +
               ' not found.'
+            )
+          }
+        })
+        .catch((reason) => self.log('error', reason))
+        .finally(() => {
+
+          if (config.take_reset) state.selected.matrix = state.selected.source = state.selected.target = -1
+
+          self.checkFeedbacks(
+            FeedbackId.SelectedTargetVideo,
+            FeedbackId.SelectedTargetAudio,
+            FeedbackId.SelectedTargetData,
+            FeedbackId.SelectedTargetMultiChannelAudio,
+            FeedbackId.SelectedTargetGPIO,
+            FeedbackId.TakeTallySourceVideo,
+            FeedbackId.TakeTallySourceAudio,
+            FeedbackId.TakeTallySourceData,
+            FeedbackId.TakeTallySourceMultiChannelAudio,
+            FeedbackId.TakeTallySourceGPIO,
+            FeedbackId.SelectedSourceVideo,
+            FeedbackId.SelectedSourceAudio,
+            FeedbackId.SelectedSourceData,
+            FeedbackId.SelectedSourceMultiChannelAudio,
+            FeedbackId.SelectedSourceGPIO,
+            FeedbackId.RoutingTallyVideo,
+            FeedbackId.RoutingTallyAudio,
+            FeedbackId.RoutingTallyData,
+            FeedbackId.RoutingTallyMultiChannelAudio,
+            FeedbackId.RoutingTallyGPIO,
+            FeedbackId.Take,
+            FeedbackId.Clear,
+            FeedbackId.Undo
           )
-        }
-      })
-      .catch((reason) => self.log('error', reason))
-      .finally(() => {
-        state.selected.matrix = state.selected.source = state.selected.target = -1
-        self.checkFeedbacks(
-          FeedbackId.SelectedTargetVideo,
-          FeedbackId.SelectedTargetAudio,
-          FeedbackId.SelectedTargetData,
-          FeedbackId.SelectedTargetMultiChannelAudio,
-          FeedbackId.SelectedTargetGPIO,
-          FeedbackId.TakeTallySourceVideo,
-          FeedbackId.TakeTallySourceAudio,
-          FeedbackId.TakeTallySourceData,
-          FeedbackId.TakeTallySourceMultiChannelAudio,
-          FeedbackId.TakeTallySourceGPIO,
-          FeedbackId.SelectedSourceVideo,
-          FeedbackId.SelectedSourceAudio,
-          FeedbackId.SelectedSourceData,
-          FeedbackId.SelectedSourceMultiChannelAudio,
-          FeedbackId.SelectedSourceGPIO,
-          FeedbackId.Take,
-          FeedbackId.Clear,
-          FeedbackId.Undo
-        )
-        updateSelectedTargetVariables(self, state)
-      })
+          updateSelectedTargetVariables(self, state)
+        })
+    }
   }
 }
 
@@ -95,26 +107,28 @@ const doMatrixActionFunction = function (
  * Performes a connect on the wanted matrix
  * @param self reference to the BaseInstance
  * @param emberClient reference to the emberClient
+ * @param config reference to the config of the module
  * @param state reference to the state of the module
  */
 const doTake =
-  (self: InstanceBase<MediornetConfig>, emberClient: EmberClient, state: MediornetState) =>
-  (action: CompanionActionEvent): void => {
-    if (state.selected.target !== -1 && state.selected.source !== -1 && state.selected.matrix !== -1) {
-      self.log(
-        'debug',
-        'TAKE: selectedDest: ' +
+  (self: InstanceBase<MediornetConfig>, emberClient: EmberClient,
+   config: MediornetConfig, state: MediornetState) =>
+    (action: CompanionActionEvent): void => {
+      if (state.selected.target !== -1 && state.selected.source !== -1 && state.selected.matrix !== -1) {
+        self.log(
+          'debug',
+          'TAKE: selectedDest: ' +
           state.selected.target +
           ' selected.source: ' +
           state.selected.source +
           ' on matrix ' +
           Number(action.options['matrix'])
-      )
-      doMatrixActionFunction(self, emberClient, state)
-    } else {
-      self.log('debug', 'TAKE went wrong.')
+        )
+        doMatrixActionFunction(self, emberClient,config, state)
+      } else {
+        self.log('debug', 'TAKE went wrong.')
+      }
     }
-  }
 
 /**
  * Clear the current selected Source and Target
@@ -139,6 +153,11 @@ const doClear = (self: InstanceBase<MediornetConfig>, state: MediornetState) => 
     FeedbackId.SelectedSourceData,
     FeedbackId.SelectedSourceMultiChannelAudio,
     FeedbackId.SelectedSourceGPIO,
+    FeedbackId.RoutingTallyVideo,
+    FeedbackId.RoutingTallyAudio,
+    FeedbackId.RoutingTallyData,
+    FeedbackId.RoutingTallyMultiChannelAudio,
+    FeedbackId.RoutingTallyGPIO,
     FeedbackId.Take,
     FeedbackId.Clear,
     FeedbackId.Undo
@@ -146,12 +165,13 @@ const doClear = (self: InstanceBase<MediornetConfig>, state: MediornetState) => 
   updateSelectedTargetVariables(self, state)
 }
 
-const doUndo = (self: InstanceBase<MediornetConfig>, emberClient: EmberClient, state: MediornetState) => (): void => {
-  const selOut = state.outputs[state.selected.matrix][state.selected.target]
-  if (selOut.fallback[selOut.fallback.length - 2] != undefined) {
+const doUndo = (self: InstanceBase<MediornetConfig>, emberClient: EmberClient,
+                config: MediornetConfig, state: MediornetState) => (): void => {
+  const selOut = state.matrices[state.selected.matrix].outputs.get(state.selected.target)
+  if (selOut != undefined && selOut.fallback[selOut.fallback.length - 2] != undefined) {
     selOut.fallback.pop()
     state.selected.source = selOut.fallback.pop() ?? -1
-    doMatrixActionFunction(self, emberClient, state)
+    doMatrixActionFunction(self, emberClient, config, state)
     self.checkFeedbacks(
       FeedbackId.SelectedTargetVideo,
       FeedbackId.SelectedTargetAudio,
@@ -168,6 +188,11 @@ const doUndo = (self: InstanceBase<MediornetConfig>, emberClient: EmberClient, s
       FeedbackId.SelectedSourceData,
       FeedbackId.SelectedSourceMultiChannelAudio,
       FeedbackId.SelectedSourceGPIO,
+      FeedbackId.RoutingTallyVideo,
+      FeedbackId.RoutingTallyAudio,
+      FeedbackId.RoutingTallyData,
+      FeedbackId.RoutingTallyMultiChannelAudio,
+      FeedbackId.RoutingTallyGPIO,
       FeedbackId.Take,
       FeedbackId.Clear,
       FeedbackId.Undo
@@ -192,27 +217,32 @@ const setSelectedSource =
     state: MediornetState,
     matrix: number
   ) =>
-  (action: CompanionActionEvent): void => {
-    if (action.options['source'] != -1 && matrix == state.selected.matrix) {
-      state.selected.source = Number(action.options['source'])
-      self.log('debug', 'Take is: ' + config.take)
-      if (config.take) doMatrixActionFunction(self, emberClient, state)
-      self.checkFeedbacks(
-        FeedbackId.SelectedSourceVideo,
-        FeedbackId.SelectedSourceAudio,
-        FeedbackId.SelectedSourceData,
-        FeedbackId.SelectedSourceMultiChannelAudio,
-        FeedbackId.SelectedSourceGPIO,
-        FeedbackId.Take,
-        FeedbackId.Clear
-      )
-      updateSelectedTargetVariables(self, state)
-      self.log(
-        'debug',
-        'setSelectedSource: ' + action.options['source'] + ' on Matrix: ' + state.matrices[matrix].label
-      )
+    (action: CompanionActionEvent): void => {
+      if (action.options['source'] != -1 && matrix == state.selected.matrix) {
+        state.selected.source = Number(action.options['source'])
+        self.log('debug', 'Take is: ' + config.take)
+        if (config.take || action.options['do_take']) doMatrixActionFunction(self, emberClient, config, state)
+        self.checkFeedbacks(
+          FeedbackId.SelectedSourceVideo,
+          FeedbackId.SelectedSourceAudio,
+          FeedbackId.SelectedSourceData,
+          FeedbackId.SelectedSourceMultiChannelAudio,
+          FeedbackId.SelectedSourceGPIO,
+          FeedbackId.RoutingTallyVideo,
+          FeedbackId.RoutingTallyAudio,
+          FeedbackId.RoutingTallyData,
+          FeedbackId.RoutingTallyMultiChannelAudio,
+          FeedbackId.RoutingTallyGPIO,
+          FeedbackId.Take,
+          FeedbackId.Clear
+        )
+        updateSelectedTargetVariables(self, state)
+        self.log(
+          'debug',
+          'setSelectedSource: ' + action.options['source'] + ' on Matrix: ' + state.matrices[matrix].label
+        )
+      }
     }
-  }
 
 /**
  * Selects a target on a specified matrix.
@@ -222,35 +252,40 @@ const setSelectedSource =
  */
 const setSelectedTarget =
   (self: InstanceBase<MediornetConfig>, state: MediornetState, matrix: number) =>
-  (action: CompanionActionEvent): void => {
-    if (action.options['target'] != -1) {
-      state.selected.target = Number(action.options['target'])
-      state.selected.matrix = matrix
+    (action: CompanionActionEvent): void => {
+      if (action.options['target'] != -1) {
+        state.selected.target = Number(action.options['target'])
+        state.selected.matrix = matrix
+      }
+      state.selected.source = -1
+      self.checkFeedbacks(
+        FeedbackId.SelectedTargetVideo,
+        FeedbackId.SelectedTargetAudio,
+        FeedbackId.SelectedTargetData,
+        FeedbackId.SelectedTargetMultiChannelAudio,
+        FeedbackId.SelectedTargetGPIO,
+        FeedbackId.TakeTallySourceVideo,
+        FeedbackId.TakeTallySourceAudio,
+        FeedbackId.TakeTallySourceData,
+        FeedbackId.TakeTallySourceMultiChannelAudio,
+        FeedbackId.TakeTallySourceGPIO,
+        FeedbackId.SelectedSourceVideo,
+        FeedbackId.SelectedSourceAudio,
+        FeedbackId.SelectedSourceData,
+        FeedbackId.SelectedSourceMultiChannelAudio,
+        FeedbackId.SelectedSourceGPIO,
+        FeedbackId.RoutingTallyVideo,
+        FeedbackId.RoutingTallyAudio,
+        FeedbackId.RoutingTallyData,
+        FeedbackId.RoutingTallyMultiChannelAudio,
+        FeedbackId.RoutingTallyGPIO,
+        FeedbackId.Take,
+        FeedbackId.Clear,
+        FeedbackId.Undo
+      )
+      updateSelectedTargetVariables(self, state)
+      self.log('debug', 'setSelectedTarget: ' + action.options['target'] + ' on Matrix: ' + state.matrices[matrix].label)
     }
-    state.selected.source = -1
-    self.checkFeedbacks(
-      FeedbackId.SelectedTargetVideo,
-      FeedbackId.SelectedTargetAudio,
-      FeedbackId.SelectedTargetData,
-      FeedbackId.SelectedTargetMultiChannelAudio,
-      FeedbackId.SelectedTargetGPIO,
-      FeedbackId.TakeTallySourceVideo,
-      FeedbackId.TakeTallySourceAudio,
-      FeedbackId.TakeTallySourceData,
-      FeedbackId.TakeTallySourceMultiChannelAudio,
-      FeedbackId.TakeTallySourceGPIO,
-      FeedbackId.SelectedSourceVideo,
-      FeedbackId.SelectedSourceAudio,
-      FeedbackId.SelectedSourceData,
-      FeedbackId.SelectedSourceMultiChannelAudio,
-      FeedbackId.SelectedSourceGPIO,
-      FeedbackId.Take,
-      FeedbackId.Clear,
-      FeedbackId.Undo
-    )
-    updateSelectedTargetVariables(self, state)
-    self.log('debug', 'setSelectedTarget: ' + action.options['target'] + ' on Matrix: ' + state.matrices[matrix].label)
-  }
 
 /**
  * Returns all implemented actions.
@@ -272,17 +307,17 @@ export function GetActionsList(
     [ActionId.Take]: {
       name: 'Take',
       options: [],
-      callback: doTake(self, emberClient, state),
+      callback: doTake(self, emberClient, config, state)
     },
     [ActionId.Clear]: {
       name: 'Clear',
       options: [],
-      callback: doClear(self, state),
+      callback: doClear(self, state)
     },
     [ActionId.Undo]: {
       name: 'Undo',
       options: [],
-      callback: doUndo(self, emberClient, state),
+      callback: doUndo(self, emberClient, config, state)
     },
     [ActionId.SetSourceVideo]: {
       name: 'Select Video Source',
@@ -293,10 +328,16 @@ export function GetActionsList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.video],
+          choices: inputChoices[matrixnames.video]
         },
+        {
+          type: 'checkbox',
+          label: 'Direct Take',
+          id: 'do_take',
+          default: false
+        }
       ],
-      callback: setSelectedSource(self, emberClient, config, state, matrixnames.video),
+      callback: setSelectedSource(self, emberClient, config, state, matrixnames.video)
     },
     [ActionId.SetTargetVideo]: {
       name: 'Select Video Target',
@@ -307,10 +348,10 @@ export function GetActionsList(
           id: 'target',
           default: 0,
           minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.video],
-        },
+          choices: outputChoices[matrixnames.video]
+        }
       ],
-      callback: setSelectedTarget(self, state, matrixnames.video),
+      callback: setSelectedTarget(self, state, matrixnames.video)
     },
     [ActionId.SetSourceAudio]: {
       name: 'Select Audio Source',
@@ -321,10 +362,16 @@ export function GetActionsList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.audio],
+          choices: inputChoices[matrixnames.audio]
         },
+        {
+          type: 'checkbox',
+          label: 'Direct Take',
+          id: 'do_take',
+          default: false
+        }
       ],
-      callback: setSelectedSource(self, emberClient, config, state, matrixnames.audio),
+      callback: setSelectedSource(self, emberClient, config, state, matrixnames.audio)
     },
     [ActionId.SetTargetAudio]: {
       name: 'Select Audio Target',
@@ -335,10 +382,10 @@ export function GetActionsList(
           id: 'target',
           default: 0,
           minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.audio],
-        },
+          choices: outputChoices[matrixnames.audio]
+        }
       ],
-      callback: setSelectedTarget(self, state, matrixnames.audio),
+      callback: setSelectedTarget(self, state, matrixnames.audio)
     },
     [ActionId.SetSourceData]: {
       name: 'Select Data Source',
@@ -349,10 +396,16 @@ export function GetActionsList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.data],
+          choices: inputChoices[matrixnames.data]
         },
+        {
+          type: 'checkbox',
+          label: 'Direct Take',
+          id: 'do_take',
+          default: false
+        }
       ],
-      callback: setSelectedSource(self, emberClient, config, state, matrixnames.data),
+      callback: setSelectedSource(self, emberClient, config, state, matrixnames.data)
     },
     [ActionId.SetTargetData]: {
       name: 'Select Data Target',
@@ -363,10 +416,10 @@ export function GetActionsList(
           id: 'target',
           default: 0,
           minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.data],
-        },
+          choices: outputChoices[matrixnames.data]
+        }
       ],
-      callback: setSelectedTarget(self, state, matrixnames.data),
+      callback: setSelectedTarget(self, state, matrixnames.data)
     },
     [ActionId.SetSourceMChAudio]: {
       name: 'Select MultiChannelAudio Source',
@@ -377,10 +430,16 @@ export function GetActionsList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.multichannelaudio],
+          choices: inputChoices[matrixnames.multichannelaudio]
         },
+        {
+          type: 'checkbox',
+          label: 'Direct Take',
+          id: 'do_take',
+          default: false
+        }
       ],
-      callback: setSelectedSource(self, emberClient, config, state, matrixnames.multichannelaudio),
+      callback: setSelectedSource(self, emberClient, config, state, matrixnames.multichannelaudio)
     },
     [ActionId.SetTargetMChAudio]: {
       name: 'Select MultiChannelAudio Target',
@@ -391,10 +450,10 @@ export function GetActionsList(
           id: 'target',
           default: 0,
           minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.multichannelaudio],
-        },
+          choices: outputChoices[matrixnames.multichannelaudio]
+        }
       ],
-      callback: setSelectedTarget(self, state, matrixnames.multichannelaudio),
+      callback: setSelectedTarget(self, state, matrixnames.multichannelaudio)
     },
     [ActionId.SetSourceGPIO]: {
       name: 'Select GPI Source',
@@ -405,10 +464,16 @@ export function GetActionsList(
           id: 'source',
           default: 0,
           minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.gpio],
+          choices: inputChoices[matrixnames.gpio]
         },
+        {
+          type: 'checkbox',
+          label: 'Direct Take',
+          id: 'do_take',
+          default: false
+        }
       ],
-      callback: setSelectedSource(self, emberClient, config, state, matrixnames.gpio),
+      callback: setSelectedSource(self, emberClient, config, state, matrixnames.gpio)
     },
     [ActionId.SetTargetGPIO]: {
       name: 'Select GPO Target',
@@ -419,11 +484,11 @@ export function GetActionsList(
           id: 'target',
           default: 0,
           minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.gpio],
-        },
+          choices: outputChoices[matrixnames.gpio]
+        }
       ],
-      callback: setSelectedTarget(self, state, matrixnames.gpio),
-    },
+      callback: setSelectedTarget(self, state, matrixnames.gpio)
+    }
   }
 
   return actions

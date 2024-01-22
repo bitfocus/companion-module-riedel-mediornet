@@ -13,24 +13,23 @@ export interface InputChoicesResult {
 export function getInputChoices(state: MediornetState): InputChoicesResult {
   const result: InputChoicesResult = {
     inputChoices: [],
-    outputChoices: [],
+    outputChoices: []
   }
   for (let i = 0; i < state.matrices.length; i++) {
     result.inputChoices[i] = []
-    for (const input of state.iterateInputs(i)) {
-      if (input.active) {
-        result.inputChoices[i].push({ id: input.id, label: input.label })
-      }
-    }
-  }
-  for (let i = 0; i < state.matrices.length; i++) {
     result.outputChoices[i] = []
-    for (const output of state.iterateOutputs(i)) {
-      if (output.active) {
-        result.outputChoices[i].push({ id: output.id, label: output.label })
+    state.iterateInputs(i).forEach((value, key) => {
+        if (value.active) {
+          result.inputChoices[i].push({ id: key, label: value.label })
+        }
       }
-    }
+    )
+    state.iterateOutputs(i).forEach((value, key) => {
+        if (value.active) {
+          result.outputChoices[i].push({ id: key, label: value.label })
+        }
+      }
+    )
   }
-
   return result
 }
