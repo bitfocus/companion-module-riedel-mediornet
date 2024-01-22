@@ -23,7 +23,7 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
     this.config = config
     this.state = new MediornetState(this)
 
-    this.state.updateCounts(this.config)
+    //this.state.updateOfflineMatrix(this.config)
     void this.setupEmberConnection()
   }
 
@@ -57,7 +57,7 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
    * Initializes all Variables.
    */
   public updateCompanionBits(): void {
-    this.state.updateCounts(this.config)
+    //this.state.updateOfflineMatrix(this.config)
     this.setActionDefinitions(GetActionsList(this, this.emberClient, this.config, this.state))
     this.setFeedbackDefinitions(GetFeedbacksList(this, this.emberClient, this.state))
     this.setPresetDefinitions(GetPresetsList(this.state))
