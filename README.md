@@ -4,8 +4,7 @@ This Module establishes an connection with Mediornet Devices from Riedel such es
 You must have EmBER+ enabled in the 3rd Party Interfaces. Later select the IP-Address of the master device.
 For further information download the 3rd Party Interfaces manual from the Riedel website (restricted access for users).
 
-This Plugin supports Mediorworks Verision 7.3.1.
-Version 7.4.0 does not work properly yet with this module.
+This Plugin supports Mediorworks Verision 7.4.0
 ## Getting started
 
 Execute `yarn` command to install the dependencies.
@@ -29,6 +28,9 @@ Enter the IP Address of the main Mediornet Device
 
 #### Auto-Take
 When enabled, a source is routed to the selected destination immediatly.
+
+#### Reset Selection
+Reset Source and Target after Take action.
 
 #### Input-/OutputCount
 For offline Programming, you can give a wanted amount of in-/outputs to give you access to all variables and dropdown menues.
