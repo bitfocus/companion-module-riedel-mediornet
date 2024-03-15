@@ -1,4 +1,4 @@
-import { MediornetConfig } from './config'
+import { DeviceConfig } from './config'
 import { MediornetInstance } from './index'
 import { QualifiedMatrix } from 'node-emberplus/lib/common/matrix/qualified-matrix'
 import { QualifiedNode } from 'node-emberplus/lib/common/qualified-node'
@@ -51,7 +51,7 @@ export interface OutputState {
   fallback: number[]
 }
 
-export class MediornetState {
+export class DeviceState {
   self: MediornetInstance
   selected: CurrentSelected
   matrices: Matrix[]
@@ -72,7 +72,7 @@ export class MediornetState {
     ]
   }
 
-  public updateOfflineMatrix(config: MediornetConfig): void {
+  public updateOfflineMatrix(config: DeviceConfig): void {
     const inputCount = config.inputCountString.split(',').map(Number)
     const outputCount = config.outputCountString.split(',').map(Number)
 
@@ -224,7 +224,7 @@ export class MediornetState {
    * Initially reads all wanted values from the Mediornet.
    * Callbacks are given for wanted updates.
    */
-  public async subscribeMediornet(): Promise<void> {
+  public async subscribeDevice(): Promise<void> {
     if (this.self.emberClient.isConnected()) {
       this.self.log('debug', 'is connected!!!')
       const inputs = this.self.config.inputCountString.split(',')

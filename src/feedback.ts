@@ -4,8 +4,8 @@ import {
   combineRgb,
   InstanceBase
 } from '@companion-module/base'
-import { MediornetConfig } from './config'
-import { matrixnames, MediornetState } from './state'
+import { DeviceConfig } from './config'
+import { matrixnames, DeviceState } from './state'
 import { getInputChoices } from './choices'
 import { EmberClient } from 'node-emberplus/lib/client/ember-client'
 
@@ -43,9 +43,9 @@ export enum FeedbackId {
  * @constructor
  */
 export function GetFeedbacksList(
-  _self: InstanceBase<MediornetConfig>,
+  _self: InstanceBase<DeviceConfig>,
   _emberClient: EmberClient,
-  state: MediornetState
+  state: DeviceState
 ): CompanionFeedbackDefinitions {
   const { inputChoices, outputChoices } = getInputChoices(state)
   const feedbacks: { [id in FeedbackId]: CompanionFeedbackDefinition | undefined } = {

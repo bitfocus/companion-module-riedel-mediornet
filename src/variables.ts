@@ -1,13 +1,13 @@
 import type { CompanionVariableDefinition, CompanionVariableValues, InstanceBase } from '@companion-module/base'
-import type { MediornetConfig } from './config'
-import type { MediornetState } from './state'
+import type { DeviceConfig } from './config'
+import type { DeviceState } from './state'
 
 /**
  * Initializes all variables
  * @param self reference to the BaseInstance
  * @param state reference to the modules state
  */
-export function initVariables(self: InstanceBase<MediornetConfig>, state: MediornetState): void {
+export function initVariables(self: InstanceBase<DeviceConfig>, state: DeviceState): void {
   const variableDefinitions: CompanionVariableDefinition[] = []
   const variableValues: CompanionVariableValues = {}
 
@@ -68,7 +68,7 @@ export function initVariables(self: InstanceBase<MediornetConfig>, state: Medior
   self.setVariableValues(variableValues)
 }
 
-export function updateSelectedTargetVariables(self: InstanceBase<MediornetConfig>, state: MediornetState): void {
+export function updateSelectedTargetVariables(self: InstanceBase<DeviceConfig>, state: DeviceState): void {
   const variableValues: CompanionVariableValues = {}
   if (state.selected.matrix != -1 && state.selected.target != -1) {
     const selectedOutput = state.matrices[state.selected.matrix].outputs.get(state.selected.target)

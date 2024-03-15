@@ -4,9 +4,9 @@ import {
   CompanionActionEvent,
   InstanceBase
 } from '@companion-module/base'
-import { MediornetConfig } from './config'
+import { DeviceConfig } from './config'
 import { FeedbackId } from './feedback'
-import { matrixnames, MediornetState } from './state'
+import { matrixnames, DeviceState } from './state'
 import { getInputChoices } from './choices'
 import { updateSelectedTargetVariables } from './variables'
 import { EmberClient } from 'node-emberplus/lib/client/ember-client'
@@ -36,10 +36,10 @@ export enum ActionId {
  * @param state reference to the state of the module
  */
 const doMatrixActionFunction = function(
-  self: InstanceBase<MediornetConfig>,
+  self: InstanceBase<DeviceConfig>,
   emberClient: EmberClient,
-  config: MediornetConfig,
-  state: MediornetState
+  config: DeviceConfig,
+  state: DeviceState
 ) {
   if (state.selected.source !== -1 && state.selected.target !== -1 && state.selected.matrix !== -1) {
     if (state.selected.source !== -1 && state.selected.target !== -1 && state.selected.matrix !== -1) {
@@ -111,8 +111,8 @@ const doMatrixActionFunction = function(
  * @param state reference to the state of the module
  */
 const doTake =
-  (self: InstanceBase<MediornetConfig>, emberClient: EmberClient,
-   config: MediornetConfig, state: MediornetState) =>
+  (self: InstanceBase<DeviceConfig>, emberClient: EmberClient,
+   config: DeviceConfig, state: DeviceState) =>
     (action: CompanionActionEvent): void => {
       if (state.selected.target !== -1 && state.selected.source !== -1 && state.selected.matrix !== -1) {
         self.log(
@@ -135,7 +135,7 @@ const doTake =
  * @param self reference to the BaseInstance
  * @param state reference to the modules state
  */
-const doClear = (self: InstanceBase<MediornetConfig>, state: MediornetState) => (): void => {
+const doClear = (self: InstanceBase<DeviceConfig>, state: DeviceState) => (): void => {
   state.selected.matrix = state.selected.source = state.selected.target = -1
   self.checkFeedbacks(
     FeedbackId.SelectedTargetVideo,
@@ -165,8 +165,8 @@ const doClear = (self: InstanceBase<MediornetConfig>, state: MediornetState) => 
   updateSelectedTargetVariables(self, state)
 }
 
-const doUndo = (self: InstanceBase<MediornetConfig>, emberClient: EmberClient,
-                config: MediornetConfig, state: MediornetState) => (): void => {
+const doUndo = (self: InstanceBase<DeviceConfig>, emberClient: EmberClient,
+                config: DeviceConfig, state: DeviceState) => (): void => {
   const selOut = state.matrices[state.selected.matrix].outputs.get(state.selected.target)
   if (selOut != undefined && selOut.fallback[selOut.fallback.length - 2] != undefined) {
     selOut.fallback.pop()
@@ -211,10 +211,10 @@ const doUndo = (self: InstanceBase<MediornetConfig>, emberClient: EmberClient,
  */
 const setSelectedSource =
   (
-    self: InstanceBase<MediornetConfig>,
+    self: InstanceBase<DeviceConfig>,
     emberClient: EmberClient,
-    config: MediornetConfig,
-    state: MediornetState,
+    config: DeviceConfig,
+    state: DeviceState,
     matrix: number
   ) =>
     (action: CompanionActionEvent): void => {
@@ -251,7 +251,7 @@ const setSelectedSource =
  * @param matrix number of the wanted matrix
  */
 const setSelectedTarget =
-  (self: InstanceBase<MediornetConfig>, state: MediornetState, matrix: number) =>
+  (self: InstanceBase<DeviceConfig>, state: DeviceState, matrix: number) =>
     (action: CompanionActionEvent): void => {
       if (action.options['target'] != -1) {
         state.selected.target = Number(action.options['target'])
@@ -296,10 +296,10 @@ const setSelectedTarget =
  * @constructor
  */
 export function GetActionsList(
-  self: InstanceBase<MediornetConfig>,
+  self: InstanceBase<DeviceConfig>,
   emberClient: EmberClient,
-  config: MediornetConfig,
-  state: MediornetState
+  config: DeviceConfig,
+  state: DeviceState
 ): CompanionActionDefinitions {
   const { inputChoices, outputChoices } = getInputChoices(state)
 

@@ -1,5 +1,5 @@
 import type { DropdownChoice } from '@companion-module/base'
-import type { MediornetState } from './state'
+import type { DeviceState } from './state'
 
 export interface InputChoicesResult {
   inputChoices: DropdownChoice[][]
@@ -10,7 +10,7 @@ export interface InputChoicesResult {
  * Returns InputChoices for Actions and Feedbacks.
  * @param state reference to the BaseInstance
  */
-export function getInputChoices(state: MediornetState): InputChoicesResult {
+export function getInputChoices(state: DeviceState): InputChoicesResult {
   const result: InputChoicesResult = {
     inputChoices: [],
     outputChoices: []
