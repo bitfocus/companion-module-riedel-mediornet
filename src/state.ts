@@ -1,4 +1,4 @@
-import { MediornetConfig } from './config'
+import { DeviceConfig } from './config'
 import { MediornetInstance } from './index'
 import { QualifiedMatrix } from 'node-emberplus/lib/common/matrix/qualified-matrix'
 import { QualifiedNode } from 'node-emberplus/lib/common/qualified-node'
@@ -28,6 +28,8 @@ export interface Matrix {
   path: string
   inputs: Map<number, InputState>
   outputs: Map<number, OutputState>
+  inputList: number[]
+  outputList: number[]
 }
 
 export interface CurrentSelected {
@@ -51,7 +53,7 @@ export interface OutputState {
   fallback: number[]
 }
 
-export class MediornetState {
+export class DeviceState {
   self: MediornetInstance
   selected: CurrentSelected
   matrices: Matrix[]
@@ -64,15 +66,15 @@ export class MediornetState {
       matrix: -1
     }
     this.matrices = [
-      { id: 0, label: 'video', path: videoPath, inputs: new Map(), outputs: new Map() },
-      { id: 1, label: 'audio', path: audioPath, inputs: new Map(), outputs: new Map() },
-      { id: 2, label: 'data', path: dataPath, inputs: new Map(), outputs: new Map() },
-      { id: 3, label: 'multichannelaudio', path: multiChannelAudioPath, inputs: new Map(), outputs: new Map() },
-      { id: 4, label: 'gpio', path: gpioPath, inputs: new Map(), outputs: new Map() }
+      { id: 0, label: 'video', path: videoPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
+      { id: 1, label: 'audio', path: audioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
+      { id: 2, label: 'data', path: dataPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
+      { id: 3, label: 'multichannelaudio', path: multiChannelAudioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
+      { id: 4, label: 'gpio', path: gpioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []}
     ]
   }
 
-  public updateOfflineMatrix(config: MediornetConfig): void {
+  public updateOfflineMatrix(config: DeviceConfig): void {
     const inputCount = config.inputCountString.split(',').map(Number)
     const outputCount = config.outputCountString.split(',').map(Number)
 
@@ -159,7 +161,7 @@ export class MediornetState {
 
     let node = await emberClient.getElementByPathAsync(labelPath).then(
       async (tempNode) => {
-        await emberClient.getDirectoryAsync(tempNode).then()
+        await emberClient.getDirectoryAsync(tempNode).then().catch()
         return tempNode
       })
       .catch((error) => {
@@ -224,7 +226,7 @@ export class MediornetState {
    * Initially reads all wanted values from the Mediornet.
    * Callbacks are given for wanted updates.
    */
-  public async subscribeMediornet(): Promise<void> {
+  public async subscribeDevice(): Promise<void> {
     if (this.self.emberClient.isConnected()) {
       this.self.log('debug', 'is connected!!!')
       const inputs = this.self.config.inputCountString.split(',')
@@ -271,6 +273,13 @@ export class MediornetState {
                 lock: false
               })
             })
+
+            this.matrices[i].inputList = Array.from(this.matrices[i].inputs.keys())
+            this.matrices[i].inputList.sort((a, b) => a - b)
+
+            this.matrices[i].outputList = Array.from(this.matrices[i].outputs.keys())
+            this.matrices[i].outputList.sort((a, b) => a - b)
+
 
 
             //Set callback for matrix to update internal matrix connection infos

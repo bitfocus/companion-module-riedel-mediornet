@@ -1,8 +1,8 @@
 import { InstanceBase, InstanceStatus, runEntrypoint, SomeCompanionConfigField } from '@companion-module/base'
 import { GetActionsList } from './actions'
-import { GetConfigFields, MediornetConfig } from './config'
+import { GetConfigFields, DeviceConfig } from './config'
 import { GetFeedbacksList } from './feedback'
-import { MediornetState } from './state'
+import { DeviceState } from './state'
 import { initVariables } from './variables'
 import { GetPresetsList } from './presets'
 import { EmberClient } from 'node-emberplus/lib/client/ember-client'
@@ -10,18 +10,18 @@ import { EmberClient } from 'node-emberplus/lib/client/ember-client'
 /**
  * Companion instance class for Riedels Mediornet Devices
  */
-export class MediornetInstance extends InstanceBase<MediornetConfig> {
+export class MediornetInstance extends InstanceBase<DeviceConfig> {
   public emberClient!: EmberClient
-  config!: MediornetConfig
-  private state!: MediornetState
+  config!: DeviceConfig
+  private state!: DeviceState
 
   /**
    * Main initialization function called once the module
    * is OK to start doing things.
    */
-  public async init(config: MediornetConfig): Promise<void> {
+  public async init(config: DeviceConfig): Promise<void> {
     this.config = config
-    this.state = new MediornetState(this)
+    this.state = new DeviceState(this)
 
     //this.state.updateOfflineMatrix(this.config)
     void this.setupEmberConnection()
@@ -30,7 +30,7 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
   /**
    * Process an updated configuration array.
    */
-  public async configUpdated(config: MediornetConfig): Promise<void> {
+  public async configUpdated(config: DeviceConfig): Promise<void> {
     this.config = config
 
     await this.emberClient.disconnectAsync()
@@ -66,9 +66,9 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
 
   /**
    * Set's up the connection to the Mediornet.
-   * Changes the status of the module, depeding of the connection's status.
-   * On Connection state.subscribeMediornet() is called, to get all the relevent information.
-   * Updates CompanionBits afterwards.
+   * Changes the status of the module, depending on the connection's status.
+   * On Connection state.subscribeMediornet() is called, to get all the relevant information.
+   * Updates CompanionBits afterward.
    * @private
    */
   private async setupEmberConnection(): Promise<void> {
@@ -83,7 +83,7 @@ export class MediornetInstance extends InstanceBase<MediornetConfig> {
       Promise.resolve()
         .then(async () => {
           this.log('debug', 'connected to ' + (this.config.host || '') + ':' + 9000)
-          await this.state.subscribeMediornet()
+          await this.state.subscribeDevice()
           this.updateCompanionBits()
         })
         .catch((e) => {

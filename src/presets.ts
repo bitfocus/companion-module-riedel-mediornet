@@ -1,7 +1,7 @@
 import { combineRgb, CompanionPresetDefinitions } from '@companion-module/base'
-import { MediornetState } from './state'
+import { DeviceState } from './state'
 
-export function GetPresetsList(state: MediornetState): CompanionPresetDefinitions {
+export function GetPresetsList(state: DeviceState): CompanionPresetDefinitions {
   const presets: CompanionPresetDefinitions = {}
 
   presets['take'] = {
