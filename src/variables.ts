@@ -56,11 +56,17 @@ export function initVariables(self: InstanceBase<DeviceConfig>, state: DeviceSta
     name: 'Label of input routed to selection',
     variableId: 'selected_target_source'
   })
+  variableDefinitions.push({
+    name: 'Label of selected source',
+    variableId: 'selected_source'
+  })
 
   variableDefinitions.push({
     name: 'Label of undo source',
     variableId: 'selected_target_undo_source'
   })
+
+  variableValues['selected_source'] = '?'
 
   updateSelectedTargetVariables(self, state)
 
@@ -77,6 +83,7 @@ export function updateSelectedTargetVariables(self: InstanceBase<DeviceConfig>, 
       : undefined
 
     variableValues['selected_target'] = selectedOutput?.label ?? '?'
+    variableValues['selected_source']= state.matrices[state.selected.matrix].inputs.get(state.selected.source)?.label
 
     variableValues['selected_target_source'] = inputForSelectedOutput?.label ?? '?'
     let fallback_length = state.matrices[state.selected.matrix].outputs.get(state.selected.target)?.fallback.length
@@ -91,6 +98,8 @@ export function updateSelectedTargetVariables(self: InstanceBase<DeviceConfig>, 
     variableValues['selected_target'] = '?'
     variableValues['selected_target_source'] = '?'
     variableValues['selected_target_undo_source'] = ''
+    variableValues['selected_source'] = '?'
   }
+
   self.setVariableValues(variableValues)
 }

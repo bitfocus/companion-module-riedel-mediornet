@@ -28,6 +28,8 @@ export interface Matrix {
   path: string
   inputs: Map<number, InputState>
   outputs: Map<number, OutputState>
+  inputList: number[]
+  outputList: number[]
 }
 
 export interface CurrentSelected {
@@ -64,11 +66,11 @@ export class DeviceState {
       matrix: -1
     }
     this.matrices = [
-      { id: 0, label: 'video', path: videoPath, inputs: new Map(), outputs: new Map() },
-      { id: 1, label: 'audio', path: audioPath, inputs: new Map(), outputs: new Map() },
-      { id: 2, label: 'data', path: dataPath, inputs: new Map(), outputs: new Map() },
-      { id: 3, label: 'multichannelaudio', path: multiChannelAudioPath, inputs: new Map(), outputs: new Map() },
-      { id: 4, label: 'gpio', path: gpioPath, inputs: new Map(), outputs: new Map() }
+      { id: 0, label: 'video', path: videoPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
+      { id: 1, label: 'audio', path: audioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
+      { id: 2, label: 'data', path: dataPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
+      { id: 3, label: 'multichannelaudio', path: multiChannelAudioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
+      { id: 4, label: 'gpio', path: gpioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []}
     ]
   }
 
@@ -159,7 +161,7 @@ export class DeviceState {
 
     let node = await emberClient.getElementByPathAsync(labelPath).then(
       async (tempNode) => {
-        await emberClient.getDirectoryAsync(tempNode).then()
+        await emberClient.getDirectoryAsync(tempNode).then().catch()
         return tempNode
       })
       .catch((error) => {
@@ -271,6 +273,13 @@ export class DeviceState {
                 lock: false
               })
             })
+
+            this.matrices[i].inputList = Array.from(this.matrices[i].inputs.keys())
+            this.matrices[i].inputList.sort((a, b) => a - b)
+
+            this.matrices[i].outputList = Array.from(this.matrices[i].outputs.keys())
+            this.matrices[i].outputList.sort((a, b) => a - b)
+
 
 
             //Set callback for matrix to update internal matrix connection infos

@@ -66,9 +66,9 @@ export class MediornetInstance extends InstanceBase<DeviceConfig> {
 
   /**
    * Set's up the connection to the Mediornet.
-   * Changes the status of the module, depeding of the connection's status.
-   * On Connection state.subscribeMediornet() is called, to get all the relevent information.
-   * Updates CompanionBits afterwards.
+   * Changes the status of the module, depending on the connection's status.
+   * On Connection state.subscribeMediornet() is called, to get all the relevant information.
+   * Updates CompanionBits afterward.
    * @private
    */
   private async setupEmberConnection(): Promise<void> {

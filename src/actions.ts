@@ -124,7 +124,7 @@ const doTake =
           ' on matrix ' +
           Number(action.options['matrix'])
         )
-        doMatrixActionFunction(self, emberClient,config, state)
+        doMatrixActionFunction(self, emberClient, config, state)
       } else {
         self.log('debug', 'TAKE went wrong.')
       }
@@ -218,10 +218,24 @@ const setSelectedSource =
     matrix: number
   ) =>
     (action: CompanionActionEvent): void => {
-      if (action.options['source'] != -1 && matrix == state.selected.matrix) {
+      let check_continue = false
+      if (action.options['source'] === 'next' || action.options['source'] === 'previous') {
+
+        let tempList = state.matrices[state.selected.matrix].inputList
+        let index = tempList.findIndex((value) => value == state.selected.source)
+
+        if (state.selected.source == -1) state.selected.source = tempList[0]
+        else if (index < tempList.length - 1 && action.options['source'] === 'next') state.selected.source = tempList[index + 1]
+        else if (0 < index && action.options['source'] === 'previous') state.selected.source = tempList[index - 1]
+
+        check_continue = true
+      } else if (action.options['source'] != -1 && matrix == state.selected.matrix) {
         state.selected.source = Number(action.options['source'])
         self.log('debug', 'Take is: ' + config.take)
         if (config.take || action.options['do_take']) doMatrixActionFunction(self, emberClient, config, state)
+        check_continue = true
+      }
+      if (check_continue) {
         self.checkFeedbacks(
           FeedbackId.SelectedSourceVideo,
           FeedbackId.SelectedSourceAudio,
@@ -253,11 +267,22 @@ const setSelectedSource =
 const setSelectedTarget =
   (self: InstanceBase<DeviceConfig>, state: DeviceState, matrix: number) =>
     (action: CompanionActionEvent): void => {
-      if (action.options['target'] != -1) {
+      if (action.options['target'] === 'next' || action.options['target'] === 'previous') {
+        let tempList = state.matrices[state.selected.matrix].outputList
+        let index = tempList.findIndex((value) => value == state.selected.target)
+
+        if (state.selected.target == -1) state.selected.target = tempList[0]
+        else if (index < tempList.length - 1 && action.options['target'] === 'next') state.selected.target = tempList[index + 1]
+        else if (0 < index && action.options['target'] === 'previous') state.selected.target = tempList[index - 1]
+
+
+        state.selected.source = Number(state.matrices[matrix].outputs.get(Number(action.options['target']))?.route)
+
+      } else if (action.options['target'] != -1) {
         state.selected.target = Number(action.options['target'])
         state.selected.matrix = matrix
+        state.selected.source = Number(state.matrices[matrix].outputs.get(Number(action.options['target']))?.route)
       }
-      state.selected.source = -1
       self.checkFeedbacks(
         FeedbackId.SelectedTargetVideo,
         FeedbackId.SelectedTargetAudio,
@@ -334,7 +359,11 @@ export function GetActionsList(
           type: 'checkbox',
           label: 'Direct Take',
           id: 'do_take',
-          default: false
+          default: false,
+          isVisible: (options): boolean => {
+            return !(options['source'] === 'next' || options['source'] === 'previous')
+          }
+
         }
       ],
       callback: setSelectedSource(self, emberClient, config, state, matrixnames.video)
@@ -368,7 +397,10 @@ export function GetActionsList(
           type: 'checkbox',
           label: 'Direct Take',
           id: 'do_take',
-          default: false
+          default: false,
+          isVisible: (options): boolean => {
+            return !(options['source'] === 'next' || options['source'] === 'previous')
+          }
         }
       ],
       callback: setSelectedSource(self, emberClient, config, state, matrixnames.audio)
@@ -402,7 +434,10 @@ export function GetActionsList(
           type: 'checkbox',
           label: 'Direct Take',
           id: 'do_take',
-          default: false
+          default: false,
+          isVisible: (options): boolean => {
+            return !(options['source'] === 'next' || options['source'] === 'previous')
+          }
         }
       ],
       callback: setSelectedSource(self, emberClient, config, state, matrixnames.data)
@@ -436,7 +471,10 @@ export function GetActionsList(
           type: 'checkbox',
           label: 'Direct Take',
           id: 'do_take',
-          default: false
+          default: false,
+          isVisible: (options): boolean => {
+            return !(options['source'] === 'next' || options['source'] === 'previous')
+          }
         }
       ],
       callback: setSelectedSource(self, emberClient, config, state, matrixnames.multichannelaudio)
@@ -470,7 +508,10 @@ export function GetActionsList(
           type: 'checkbox',
           label: 'Direct Take',
           id: 'do_take',
-          default: false
+          default: false,
+          isVisible: (options): boolean => {
+            return !(options['source'] === 'next' || options['source'] === 'previous')
+          }
         }
       ],
       callback: setSelectedSource(self, emberClient, config, state, matrixnames.gpio)

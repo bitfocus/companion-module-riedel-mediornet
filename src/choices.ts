@@ -18,6 +18,10 @@ export function getInputChoices(state: DeviceState): InputChoicesResult {
   for (let i = 0; i < state.matrices.length; i++) {
     result.inputChoices[i] = []
     result.outputChoices[i] = []
+
+    result.inputChoices[i].push({id: 'next', label: 'NEXT'}, {id: 'previous', label: 'PREVIOUS'})
+    result.outputChoices[i].push({id: 'next', label: 'NEXT'}, {id: 'previous', label: 'PREVIOUS'})
+
     state.iterateInputs(i).forEach((value, key) => {
         if (value.active) {
           result.inputChoices[i].push({ id: key, label: value.label })
