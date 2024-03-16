@@ -161,11 +161,11 @@ export class DeviceState {
 
     let node = await emberClient.getElementByPathAsync(labelPath).then(
       async (tempNode) => {
-        await emberClient.getDirectoryAsync(tempNode).then().catch()
+        await emberClient.getDirectoryAsync(tempNode).then().catch((e)=>this.self.log('error', 'Error on getLabels: ' + e))
         return tempNode
       })
       .catch((error) => {
-        this.self.log('error', labelPath + ': Node does not exist. There are no labels for matrix: ' + error)
+        this.self.log('error', labelPath + ': Node does not exist. There are no labels for matrix: ' + matrix_index + ' Error: ' + error)
         return null
       })
     if (node != null && node instanceof QualifiedNode) {
@@ -215,6 +215,9 @@ export class DeviceState {
                 }
               }
             })
+              .catch((error) => {
+                emberClient.emit('error', 'Error on SetLabelUpdate: ' + error)
+              })
           }
         })
         this.self.setVariableValues(variableValues)
@@ -317,6 +320,9 @@ export class DeviceState {
                 }
               } //if 'connections' in matrixUpdate
             }) // end getDirectory
+              .catch((error) => {
+                this.self.emberClient.emit('error', 'Error on getUpdatesOnConnections: ' + error)
+              })
 
 
             //Recieve Labels
@@ -328,8 +334,8 @@ export class DeviceState {
                   if (node != undefined) return await this.self.emberClient.getDirectoryAsync(node)
                   else return undefined
                 })
-                .catch(() =>
-                  console.log(labelPath + ': Node does not exist. There are no labels for matrix: ' + matrix.path)
+                .catch((error) =>
+                  console.log(labelPath + ': Node does not exist. There are no labels for matrix: ' + matrix.path + ' Error: ' + error)
                 )
               if (labelNode?.hasChildren()) {
                 labelNode?.elements.forEach((child) => {

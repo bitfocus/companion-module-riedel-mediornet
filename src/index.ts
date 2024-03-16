@@ -14,6 +14,7 @@ export class MediornetInstance extends InstanceBase<DeviceConfig> {
   public emberClient!: EmberClient
   config!: DeviceConfig
   private state!: DeviceState
+  connectionInterval?: NodeJS.Timeout
 
   /**
    * Main initialization function called once the module
@@ -72,36 +73,71 @@ export class MediornetInstance extends InstanceBase<DeviceConfig> {
    * @private
    */
   private async setupEmberConnection(): Promise<void> {
-    this.log('debug', 'connecting ' + (this.config.host || '') + ':' + 9000)
-    this.updateStatus(InstanceStatus.Connecting)
 
-    this.emberClient = new EmberClient({ host: this.config.host || '', port: 9000 })
-    this.emberClient.on('error', (e: string) => {
-      this.log('error', 'Error ' + e)
-    })
-    this.emberClient.on('connected', () => {
-      Promise.resolve()
-        .then(async () => {
-          this.log('debug', 'connected to ' + (this.config.host || '') + ':' + 9000)
-          await this.state.subscribeDevice()
-          this.updateCompanionBits()
-        })
-        .catch((e) => {
-          // get root
-          this.log('error', 'Failed to discover root: ' + e)
-        })
-      this.updateStatus(InstanceStatus.Ok)
-    })
-    this.emberClient.on('disconnected', () => {
-      this.updateStatus(InstanceStatus.Connecting)
-    })
-    await this.emberClient.connectAsync().then(async () => {
-      await this.emberClient.getDirectoryAsync()
-    } ).catch((e) => {
+    this.emberClient = new EmberClient({ host: this.config.host || '', port: 9000, timeoutValue: 3000 })
+
+    this.emberClient.on('error', async (e) => {
       this.updateStatus(InstanceStatus.ConnectionFailure)
-      this.log('error', e)
+      this.log('error', 'emberClient Error: ' + String(e))
+      if (String(e).includes('EmberTimeoutError')) await this.emberClient.disconnectAsync()
+
+      clearInterval(this.connectionInterval)
+
+      setTimeout(() => {
+        this.emberClient.connectAsync()
+          .then()
+          .catch((_e) => {
+            this.updateStatus(InstanceStatus.ConnectionFailure)
+          })
+      }, 2000)
+
     })
-    this.updateCompanionBits()
+
+    this.emberClient.on('connecting', () => {
+      this.updateStatus(InstanceStatus.Connecting)
+      this.log('debug', 'Connecting: ' + (this.config.host || '') + ':' + 9000)
+
+    })
+
+    this.emberClient.on('connected', async () => {
+      this.updateStatus(InstanceStatus.Ok)
+      this.log('debug', 'Connected: ' + (this.config.host || '') + ':' + 9000)
+      Promise.resolve().then(async () => {
+        await this.emberClient.getDirectoryAsync()
+          .then(async () => {
+            await this.state.subscribeDevice()
+            this.updateCompanionBits()
+          })
+          .catch((e) => {
+            this.log('error', 'Failed to discover root: ' + e)
+          })
+
+        this.connectionInterval = setInterval(async () => {
+
+          await this.emberClient.getElementByPathAsync('1')
+            .then()
+            .catch(async (_e) => {
+              await this.emberClient.disconnectAsync()
+            })
+        }, 3000)
+      })
+        .catch((error) => this.log('error', 'Promise not valid: ' + error))
+    })
+
+    this.emberClient.on('disconnected', (e) => {
+      this.updateStatus(InstanceStatus.Disconnected)
+      this.log('error', 'Disconnected Text: ' + e)
+      this.log('error', 'Disconnected JSON: ' + JSON.stringify(e))
+    })
+
+    await this.emberClient.connectAsync()
+      .then()
+      .catch((e) => {
+        this.updateStatus(InstanceStatus.ConnectionFailure)
+        this.emberClient.emit('error', 'Error on Connecting: ' + e)
+      })
+
+
   }
 }
 
