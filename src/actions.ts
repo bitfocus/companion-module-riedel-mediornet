@@ -113,7 +113,7 @@ const doMatrixActionFunction = function(
 const doTake =
   (self: InstanceBase<DeviceConfig>, emberClient: EmberClient,
    config: DeviceConfig, state: DeviceState) =>
-    (action: CompanionActionEvent): void => {
+    (): void => {
       if (state.selected.target !== -1 && state.selected.source !== -1 && state.selected.matrix !== -1) {
         self.log(
           'debug',
@@ -122,7 +122,7 @@ const doTake =
           ' selected.source: ' +
           state.selected.source +
           ' on matrix ' +
-          Number(action.options['matrix'])
+          state.selected.matrix
         )
         doMatrixActionFunction(self, emberClient, config, state)
       } else {
@@ -276,7 +276,8 @@ const setSelectedTarget =
         else if (0 < index && action.options['target'] === 'previous') state.selected.target = tempList[index - 1]
 
 
-        state.selected.source = Number(state.matrices[matrix].outputs.get(Number(action.options['target']))?.route)
+        state.selected.source =  Number(state.matrices[matrix].outputs.get(state.selected.target)?.route)
+        if (Number.isNaN(state.selected.source)) state.selected.source = tempList[0]
 
       } else if (action.options['target'] != -1) {
         state.selected.target = Number(action.options['target'])
