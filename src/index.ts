@@ -1,11 +1,12 @@
 import { InstanceBase, InstanceStatus, runEntrypoint, SomeCompanionConfigField } from '@companion-module/base'
 import { GetActionsList } from './actions'
 import { GetConfigFields, DeviceConfig } from './config'
-import { GetFeedbacksList } from './feedback'
+import { FeedbackId, GetFeedbacksList } from './feedback'
 import { DeviceState } from './state'
 import { initVariables } from './variables'
 import { GetPresetsList } from './presets'
 import { EmberClient } from 'node-emberplus/lib/client/ember-client'
+import { getUpgrades } from './upgrades.js'
 
 /**
  * Companion instance class for Riedels Mediornet Devices
@@ -63,6 +64,7 @@ export class MediornetInstance extends InstanceBase<DeviceConfig> {
     this.setFeedbackDefinitions(GetFeedbacksList(this, this.emberClient, this.state))
     this.setPresetDefinitions(GetPresetsList(this.state))
     initVariables(this, this.state)
+    this.checkFeedbacks(FeedbackId.RoutingTally)
   } // end updateCompanionBits
 
   /**
@@ -141,4 +143,4 @@ export class MediornetInstance extends InstanceBase<DeviceConfig> {
   }
 }
 
-runEntrypoint(MediornetInstance, [])
+runEntrypoint(MediornetInstance, getUpgrades())

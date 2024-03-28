@@ -4,23 +4,28 @@ import type { DeviceState } from './state'
 export interface InputChoicesResult {
   inputChoices: DropdownChoice[][]
   outputChoices: DropdownChoice[][]
+  matrixChoices: DropdownChoice[]
+  nextPreviousChoices: DropdownChoice[]
 }
 
 /**
  * Returns InputChoices for Actions and Feedbacks.
  * @param state reference to the BaseInstance
  */
-export function getInputChoices(state: DeviceState): InputChoicesResult {
+export function getChoices(state: DeviceState): InputChoicesResult {
   const result: InputChoicesResult = {
     inputChoices: [],
-    outputChoices: []
+    outputChoices: [],
+    matrixChoices: [],
+    nextPreviousChoices: []
   }
+  result.nextPreviousChoices.push({id: 'next', label: 'NEXT'}, {id: 'previous', label: 'PREVIOUS'})
+
   for (let i = 0; i < state.matrices.length; i++) {
     result.inputChoices[i] = []
     result.outputChoices[i] = []
+    result.matrixChoices[i] = {id: i, label: state.matrices[i].label}
 
-    result.inputChoices[i].push({id: 'next', label: 'NEXT'}, {id: 'previous', label: 'PREVIOUS'})
-    result.outputChoices[i].push({id: 'next', label: 'NEXT'}, {id: 'previous', label: 'PREVIOUS'})
 
     state.iterateInputs(i).forEach((value, key) => {
         if (value.active) {

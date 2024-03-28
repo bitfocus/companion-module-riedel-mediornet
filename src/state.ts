@@ -25,6 +25,7 @@ const gpioPath = '1.2.4.3'
 export interface Matrix {
   id: number
   label: string
+  variableName: string
   path: string
   inputs: Map<number, InputState>
   outputs: Map<number, OutputState>
@@ -66,11 +67,11 @@ export class DeviceState {
       matrix: -1
     }
     this.matrices = [
-      { id: 0, label: 'video', path: videoPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
-      { id: 1, label: 'audio', path: audioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
-      { id: 2, label: 'data', path: dataPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
-      { id: 3, label: 'multichannelaudio', path: multiChannelAudioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
-      { id: 4, label: 'gpio', path: gpioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []}
+      { id: 0, label: 'Video', variableName: 'video', path: videoPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
+      { id: 1, label: 'Audio',  variableName: 'audio', path: audioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
+      { id: 2, label: 'Data', variableName: 'data', path: dataPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
+      { id: 3, label: 'Multi Channel Audio', variableName: 'multichannelaudio', path: multiChannelAudioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
+      { id: 4, label: 'GPIO', variableName: 'gpio', path: gpioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []}
     ]
   }
 
@@ -190,7 +191,7 @@ export class DeviceState {
             if (typeof value.identifier == 'string' && typeof value.value == 'string' && labelTarget != undefined) {
               labelTarget.name = value.identifier
               labelTarget.label = value.value
-              variableValues[`${labelTargetGroup}_${this.matrices[matrix_index].label}_${numKey + 1}`] =
+              variableValues[`${labelTargetGroup}_${this.matrices[matrix_index].variableName}_${numKey + 1}`] =
                 labelTarget.label
             }
 
@@ -200,13 +201,13 @@ export class DeviceState {
                 if (labelTarget != undefined) {
                   labelTarget.label = update.value as string
                   const variableValuesnew: CompanionVariableValues = {}
-                  variableValuesnew[`${labelTargetGroup}_${this.matrices[matrix_index].label}_${numKey + 1}`] =
+                  variableValuesnew[`${labelTargetGroup}_${this.matrices[matrix_index].variableName}_${numKey + 1}`] =
                     labelTarget.label
                   if (labelTargetGroup == 'input') {
                     this.matrices[matrix_index].outputs.forEach((value, key) => {
                       if (value.route == numKey) {
                         console.log(value)
-                        variableValuesnew[`output_${this.matrices[matrix_index].label}_${key + 1}_input`] =
+                        variableValuesnew[`output_${this.matrices[matrix_index].variableName}_${key + 1}_input`] =
                           labelTarget?.label ?? '?'
                       }
                     })
@@ -299,21 +300,13 @@ export class DeviceState {
                     matrixElement.route = sources[0]
                     matrixElement.fallback.push(sources[0])
                     this.self.checkFeedbacks(
-                      FeedbackId.TakeTallySourceVideo,
-                      FeedbackId.TakeTallySourceAudio,
-                      FeedbackId.TakeTallySourceData,
-                      FeedbackId.TakeTallySourceGPIO,
-                      FeedbackId.TakeTallySourceMultiChannelAudio,
-                      FeedbackId.RoutingTallyVideo,
-                      FeedbackId.RoutingTallyAudio,
-                      FeedbackId.RoutingTallyData,
-                      FeedbackId.RoutingTallyMultiChannelAudio,
-                      FeedbackId.RoutingTallyGPIO,
+                      FeedbackId.TakeTallySource,
+                      FeedbackId.RoutingTally,
                       FeedbackId.Take,
                       FeedbackId.Undo
                     )
                     const variableValuesnew: CompanionVariableValues = {}
-                    variableValuesnew[`output_${this.matrices[i].label}_${Number(connectionsKey) + 1}_input`] =
+                    variableValuesnew[`output_${this.matrices[i].variableName}_${Number(connectionsKey) + 1}_input`] =
                       this.getInput(sources[0], i)?.label ?? '?'
                     this.self.setVariableValues(variableValuesnew)
                   } // if sources != undefined

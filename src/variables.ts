@@ -16,10 +16,10 @@ export function initVariables(self: InstanceBase<DeviceConfig>, state: DeviceSta
         if (input.active) {
           variableDefinitions.push({
             name: `Label of input ${state.matrices[i].label} ${key + 1}`,
-            variableId: `input_${state.matrices[i].label}_${key + 1}`
+            variableId: `input_${state.matrices[i].variableName}_${key + 1}`
           })
 
-          variableValues[`input_${state.matrices[i].label}_${key + 1}`] = input.label
+          variableValues[`input_${state.matrices[i].variableName}_${key + 1}`] = input.label
         }
       }
     )
@@ -30,17 +30,17 @@ export function initVariables(self: InstanceBase<DeviceConfig>, state: DeviceSta
         if (output.active) {
           variableDefinitions.push({
             name: `Label of output ${state.matrices[i].label} ${key + 1}`,
-            variableId: `output_${state.matrices[i].label}_${key + 1}`
+            variableId: `output_${state.matrices[i].variableName}_${key + 1}`
           })
 
-          variableValues[`output_${state.matrices[i].label}_${key + 1}`] = output.label
+          variableValues[`output_${state.matrices[i].variableName}_${key + 1}`] = output.label
 
           variableDefinitions.push({
             name: `Label of input routed to ${state.matrices[i].label} output ${key + 1}`,
-            variableId: `output_${state.matrices[i].label}_${key + 1}_input`
+            variableId: `output_${state.matrices[i].variableName}_${key + 1}_input`
           })
 
-          variableValues[`output_${state.matrices[i].label}_${key + 1}_input`] =
+          variableValues[`output_${state.matrices[i].variableName}_${key + 1}_input`] =
             state.getInput(output.route, i)?.label ?? '?'
         }
       }

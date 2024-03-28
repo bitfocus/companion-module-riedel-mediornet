@@ -7,7 +7,7 @@ import {
 import { DeviceConfig } from './config'
 import { FeedbackId } from './feedback'
 import { matrixnames, DeviceState } from './state'
-import { getInputChoices } from './choices'
+import { getChoices } from './choices'
 import { updateSelectedTargetVariables } from './variables'
 import { EmberClient } from 'node-emberplus/lib/client/ember-client'
 import { QualifiedMatrix } from 'node-emberplus/lib/common/matrix/qualified-matrix'
@@ -16,16 +16,9 @@ export enum ActionId {
   Take = 'take',
   Clear = 'clear',
   Undo = 'undo',
-  SetSourceVideo = 'select_source_video',
-  SetTargetVideo = 'select_target_video',
-  SetSourceAudio = 'select_source_audio',
-  SetTargetAudio = 'select_target_audio',
-  SetSourceData = 'select_source_data',
-  SetTargetData = 'select_target_data',
-  SetSourceMChAudio = 'select_source_multichannelaudio',
-  SetTargetMChAudio = 'select_target_multichannelaudio',
-  SetSourceGPIO = 'select_source_gpio',
-  SetTargetGPIO = 'select_target_gpio',
+  SetSource = 'select_source',
+  SetTarget = 'select_target',
+  SetMatrix = 'select_matrix',
 }
 
 /**
@@ -48,7 +41,7 @@ const doMatrixActionFunction = function(
         .getElementByPathAsync(state.matrices[state.selected.matrix].path)
         .then((node) => {
           if (node && node instanceof QualifiedMatrix) {
-            self.log('debug', 'Got node on ' + state.matrices[state.selected.matrix].label)
+            //self.log('debug', 'Got node on ' + state.matrices[state.selected.matrix].label)
             const target = state.selected.target
             const sources = [state.selected.source]
             emberClient
@@ -72,26 +65,11 @@ const doMatrixActionFunction = function(
           if (config.take_reset) state.selected.matrix = state.selected.source = state.selected.target = -1
 
           self.checkFeedbacks(
-            FeedbackId.SelectedTargetVideo,
-            FeedbackId.SelectedTargetAudio,
-            FeedbackId.SelectedTargetData,
-            FeedbackId.SelectedTargetMultiChannelAudio,
-            FeedbackId.SelectedTargetGPIO,
-            FeedbackId.TakeTallySourceVideo,
-            FeedbackId.TakeTallySourceAudio,
-            FeedbackId.TakeTallySourceData,
-            FeedbackId.TakeTallySourceMultiChannelAudio,
-            FeedbackId.TakeTallySourceGPIO,
-            FeedbackId.SelectedSourceVideo,
-            FeedbackId.SelectedSourceAudio,
-            FeedbackId.SelectedSourceData,
-            FeedbackId.SelectedSourceMultiChannelAudio,
-            FeedbackId.SelectedSourceGPIO,
-            FeedbackId.RoutingTallyVideo,
-            FeedbackId.RoutingTallyAudio,
-            FeedbackId.RoutingTallyData,
-            FeedbackId.RoutingTallyMultiChannelAudio,
-            FeedbackId.RoutingTallyGPIO,
+            FeedbackId.SelectedTarget,
+            FeedbackId.TakeTallySource,
+            FeedbackId.SelectedSource,
+            FeedbackId.RoutingTally,
+            FeedbackId.SelectedMatrix,
             FeedbackId.Take,
             FeedbackId.Clear,
             FeedbackId.Undo
@@ -138,26 +116,11 @@ const doTake =
 const doClear = (self: InstanceBase<DeviceConfig>, state: DeviceState) => (): void => {
   state.selected.matrix = state.selected.source = state.selected.target = -1
   self.checkFeedbacks(
-    FeedbackId.SelectedTargetVideo,
-    FeedbackId.SelectedTargetAudio,
-    FeedbackId.SelectedTargetData,
-    FeedbackId.SelectedTargetMultiChannelAudio,
-    FeedbackId.SelectedTargetGPIO,
-    FeedbackId.TakeTallySourceVideo,
-    FeedbackId.TakeTallySourceAudio,
-    FeedbackId.TakeTallySourceData,
-    FeedbackId.TakeTallySourceMultiChannelAudio,
-    FeedbackId.TakeTallySourceGPIO,
-    FeedbackId.SelectedSourceVideo,
-    FeedbackId.SelectedSourceAudio,
-    FeedbackId.SelectedSourceData,
-    FeedbackId.SelectedSourceMultiChannelAudio,
-    FeedbackId.SelectedSourceGPIO,
-    FeedbackId.RoutingTallyVideo,
-    FeedbackId.RoutingTallyAudio,
-    FeedbackId.RoutingTallyData,
-    FeedbackId.RoutingTallyMultiChannelAudio,
-    FeedbackId.RoutingTallyGPIO,
+    FeedbackId.SelectedTarget,
+    FeedbackId.TakeTallySource,
+    FeedbackId.SelectedSource,
+    FeedbackId.RoutingTally,
+    FeedbackId.SelectedMatrix,
     FeedbackId.Take,
     FeedbackId.Clear,
     FeedbackId.Undo
@@ -173,26 +136,11 @@ const doUndo = (self: InstanceBase<DeviceConfig>, emberClient: EmberClient,
     state.selected.source = selOut.fallback.pop() ?? -1
     doMatrixActionFunction(self, emberClient, config, state)
     self.checkFeedbacks(
-      FeedbackId.SelectedTargetVideo,
-      FeedbackId.SelectedTargetAudio,
-      FeedbackId.SelectedTargetData,
-      FeedbackId.SelectedTargetMultiChannelAudio,
-      FeedbackId.SelectedTargetGPIO,
-      FeedbackId.TakeTallySourceVideo,
-      FeedbackId.TakeTallySourceAudio,
-      FeedbackId.TakeTallySourceData,
-      FeedbackId.TakeTallySourceMultiChannelAudio,
-      FeedbackId.TakeTallySourceGPIO,
-      FeedbackId.SelectedSourceVideo,
-      FeedbackId.SelectedSourceAudio,
-      FeedbackId.SelectedSourceData,
-      FeedbackId.SelectedSourceMultiChannelAudio,
-      FeedbackId.SelectedSourceGPIO,
-      FeedbackId.RoutingTallyVideo,
-      FeedbackId.RoutingTallyAudio,
-      FeedbackId.RoutingTallyData,
-      FeedbackId.RoutingTallyMultiChannelAudio,
-      FeedbackId.RoutingTallyGPIO,
+      FeedbackId.SelectedTarget,
+      FeedbackId.TakeTallySource,
+      FeedbackId.SelectedSource,
+      FeedbackId.RoutingTally,
+      FeedbackId.SelectedMatrix,
       FeedbackId.Take,
       FeedbackId.Clear,
       FeedbackId.Undo
@@ -215,45 +163,44 @@ const setSelectedSource =
     emberClient: EmberClient,
     config: DeviceConfig,
     state: DeviceState,
-    matrix: number
   ) =>
     (action: CompanionActionEvent): void => {
       let check_continue = false
-      if (action.options['source'] === 'next' || action.options['source'] === 'previous') {
 
-        let tempList = state.matrices[state.selected.matrix].inputList
-        let index = tempList.findIndex((value) => value == state.selected.source)
+      if (Boolean(action.options['next_previous_action'])) {
+        if (action.options['next_previous'] === 'next' || action.options['next_previous'] === 'previous') {
+          let tempList = state.matrices[state.selected.matrix].inputList
+          let index = tempList.findIndex((value) => value == state.selected.source)
 
-        if (state.selected.source == -1) state.selected.source = tempList[0]
-        else if (index < tempList.length - 1 && action.options['source'] === 'next') state.selected.source = tempList[index + 1]
-        else if (0 < index && action.options['source'] === 'previous') state.selected.source = tempList[index - 1]
+          if (state.selected.source == -1) state.selected.source = tempList[0]
+          else if (index < tempList.length - 1 && action.options['next_previous'] === 'next') state.selected.source = tempList[index + 1]
+          else if (0 < index && action.options['next_previous'] === 'previous') state.selected.source = tempList[index - 1]
 
-        check_continue = true
-      } else if (action.options['source'] != -1 && matrix == state.selected.matrix) {
-        state.selected.source = Number(action.options['source'])
-        self.log('debug', 'Take is: ' + config.take)
-        if (config.take || action.options['do_take']) doMatrixActionFunction(self, emberClient, config, state)
-        check_continue = true
+
+          check_continue = true
+        }
+      } else {
+        let matrix = Number(action.options['matrix'])
+        let source = Number(action.options[`source_${matrix}`])
+        if (!Number.isNaN(matrix) && !Number.isNaN(source) && matrix == state.selected.matrix) {
+          state.selected.source = source
+          self.log('debug', 'Take is: ' + config.take)
+          if (config.take || action.options['do_take']) doMatrixActionFunction(self, emberClient, config, state)
+          check_continue = true
+        }
       }
+
       if (check_continue) {
         self.checkFeedbacks(
-          FeedbackId.SelectedSourceVideo,
-          FeedbackId.SelectedSourceAudio,
-          FeedbackId.SelectedSourceData,
-          FeedbackId.SelectedSourceMultiChannelAudio,
-          FeedbackId.SelectedSourceGPIO,
-          FeedbackId.RoutingTallyVideo,
-          FeedbackId.RoutingTallyAudio,
-          FeedbackId.RoutingTallyData,
-          FeedbackId.RoutingTallyMultiChannelAudio,
-          FeedbackId.RoutingTallyGPIO,
+          FeedbackId.SelectedSource,
+          FeedbackId.RoutingTally,
           FeedbackId.Take,
           FeedbackId.Clear
         )
         updateSelectedTargetVariables(self, state)
         self.log(
           'debug',
-          'setSelectedSource: ' + action.options['source'] + ' on Matrix: ' + state.matrices[matrix].label
+          'setSelectedSource: ' + state.selected.source + ' on Matrix: ' + state.matrices[state.selected.matrix].label
         )
       }
     }
@@ -265,53 +212,88 @@ const setSelectedSource =
  * @param matrix number of the wanted matrix
  */
 const setSelectedTarget =
-  (self: InstanceBase<DeviceConfig>, state: DeviceState, matrix: number) =>
+  (self: InstanceBase<DeviceConfig>, state: DeviceState) =>
     (action: CompanionActionEvent): void => {
-      if (action.options['target'] === 'next' || action.options['target'] === 'previous') {
-        let tempList = state.matrices[state.selected.matrix].outputList
-        let index = tempList.findIndex((value) => value == state.selected.target)
+      if (Boolean(action.options['next_previous_action'])) {
+        if (action.options['next_previous'] === 'next' || action.options['next_previous'] === 'previous') {
+          let tempList = state.matrices[state.selected.matrix].outputList
+          let index = tempList.findIndex((value) => value == state.selected.target)
 
-        if (state.selected.target == -1) state.selected.target = tempList[0]
-        else if (index < tempList.length - 1 && action.options['target'] === 'next') state.selected.target = tempList[index + 1]
-        else if (0 < index && action.options['target'] === 'previous') state.selected.target = tempList[index - 1]
+          if (state.selected.target == -1) state.selected.target = tempList[0]
+          else if (index < tempList.length - 1 && action.options['next_previous'] === 'next') state.selected.target = tempList[index + 1]
+          else if (0 < index && action.options['next_previous'] === 'previous') state.selected.target = tempList[index - 1]
 
 
-        state.selected.source =  Number(state.matrices[matrix].outputs.get(state.selected.target)?.route)
-        if (Number.isNaN(state.selected.source)) state.selected.source = tempList[0]
-
-      } else if (action.options['target'] != -1) {
-        state.selected.target = Number(action.options['target'])
-        state.selected.matrix = matrix
-        state.selected.source = Number(state.matrices[matrix].outputs.get(Number(action.options['target']))?.route)
+          state.selected.source = Number(state.matrices[state.selected.matrix].outputs.get(state.selected.target)?.route)
+          if (Number.isNaN(state.selected.source)) state.selected.source = tempList[0]
+        }
+      } else {
+        let matrix = Number(action.options['matrix'])
+        let target = action.options[`target_${matrix}`]
+        if (!Number.isNaN(matrix)) {
+          if (target != -1) {
+            state.selected.target = Number(target)
+            state.selected.matrix = matrix
+            state.selected.source = Number(state.matrices[matrix].outputs.get(Number(target))?.route)
+          }
+        }
       }
+
       self.checkFeedbacks(
-        FeedbackId.SelectedTargetVideo,
-        FeedbackId.SelectedTargetAudio,
-        FeedbackId.SelectedTargetData,
-        FeedbackId.SelectedTargetMultiChannelAudio,
-        FeedbackId.SelectedTargetGPIO,
-        FeedbackId.TakeTallySourceVideo,
-        FeedbackId.TakeTallySourceAudio,
-        FeedbackId.TakeTallySourceData,
-        FeedbackId.TakeTallySourceMultiChannelAudio,
-        FeedbackId.TakeTallySourceGPIO,
-        FeedbackId.SelectedSourceVideo,
-        FeedbackId.SelectedSourceAudio,
-        FeedbackId.SelectedSourceData,
-        FeedbackId.SelectedSourceMultiChannelAudio,
-        FeedbackId.SelectedSourceGPIO,
-        FeedbackId.RoutingTallyVideo,
-        FeedbackId.RoutingTallyAudio,
-        FeedbackId.RoutingTallyData,
-        FeedbackId.RoutingTallyMultiChannelAudio,
-        FeedbackId.RoutingTallyGPIO,
+        FeedbackId.SelectedTarget,
+        FeedbackId.TakeTallySource,
+        FeedbackId.SelectedSource,
+        FeedbackId.RoutingTally,
+        FeedbackId.SelectedMatrix,
         FeedbackId.Take,
         FeedbackId.Clear,
         FeedbackId.Undo
       )
       updateSelectedTargetVariables(self, state)
-      self.log('debug', 'setSelectedTarget: ' + action.options['target'] + ' on Matrix: ' + state.matrices[matrix].label)
+      self.log('debug', 'setSelectedTarget: ' + state.selected.target + ' on Matrix: ' + state.matrices[state.selected.matrix].label)
+
     }
+
+/**
+ * Selects a source on a specific matrix.
+ * When Auto-Take is enabled the source is routed to the selected target.
+ * @param self reference to the BaseInstance
+ * @param emberClient reference to the emberClient
+ * @param config reference to the config of the module
+ * @param state reference to the state of the module
+ * @param matrix number of the wanted matrix
+ */
+const setSelectedMatrix =
+  (
+    self: InstanceBase<DeviceConfig>,
+    state: DeviceState
+  ) =>
+    (action: CompanionActionEvent): void => {
+      let matrix = Number(action.options['matrix'])
+      if (!Number.isNaN(matrix)) {
+        state.selected.matrix = matrix
+        let tempList = state.matrices[state.selected.matrix].outputList
+        state.selected.target = tempList[0]
+        state.selected.source = Number(state.matrices[state.selected.matrix].outputs.get(state.selected.target)?.route)
+        self.checkFeedbacks(
+          FeedbackId.SelectedTarget,
+          FeedbackId.TakeTallySource,
+          FeedbackId.SelectedSource,
+          FeedbackId.RoutingTally,
+          FeedbackId.SelectedMatrix,
+          FeedbackId.Take,
+          FeedbackId.Clear,
+          FeedbackId.Undo
+        )
+        updateSelectedTargetVariables(self, state)
+      }
+      self.log(
+        'debug',
+        'setSelectedMatrix: ' + state.matrices[matrix].label
+      )
+
+    }
+
 
 /**
  * Returns all implemented actions.
@@ -327,7 +309,7 @@ export function GetActionsList(
   config: DeviceConfig,
   state: DeviceState
 ): CompanionActionDefinitions {
-  const { inputChoices, outputChoices } = getInputChoices(state)
+  const { inputChoices, outputChoices, matrixChoices, nextPreviousChoices } = getChoices(state)
 
   const actions: { [id in ActionId]: CompanionActionDefinition | undefined } = {
     [ActionId.Take]: {
@@ -345,191 +327,207 @@ export function GetActionsList(
       options: [],
       callback: doUndo(self, emberClient, config, state)
     },
-    [ActionId.SetSourceVideo]: {
-      name: 'Select Video Source',
+    [ActionId.SetSource]: {
+      name: 'Select Source',
+      description: 'Select a source of a matrix or select next or previous source of currently selected matrix.',
       options: [
         {
+          id: 'next_previous_action',
+          type: 'checkbox',
+          label: 'NEXT/PREVIOUS Action',
+          default: false
+        },
+        {
+          id: 'next_previous',
           type: 'dropdown',
-          label: 'Value',
-          id: 'source',
-          default: 0,
-          minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.video]
+          label: 'Next or Previous',
+          default: 'next',
+          choices: nextPreviousChoices,
+          isVisible: (options) => {
+            return (options['next_previous_action'] == true)
+          }
         },
         {
           type: 'checkbox',
           label: 'Direct Take',
           id: 'do_take',
           default: false,
-          isVisible: (options): boolean => {
-            return !(options['source'] === 'next' || options['source'] === 'previous')
+          isVisible: (options) => {
+            return (options['next_previous_action'] == false)
           }
+        },
+        {
+          type: 'dropdown',
+          label: 'Matrix',
+          id: 'matrix',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: matrixChoices,
+          isVisible: (options) => {
+            return (options['next_previous_action'] == false)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.video].label} Source`,
+          id: `source_${matrixnames.video}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.video],
+          isVisible: (options) => {
+            return (options['next_previous_action'] == false && options['matrix'] == 0)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.audio].label} Target`,
+          id: `source_${matrixnames.audio}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.audio],
+          isVisible: options => {
+            return (options['next_previous_action'] == false && options['matrix'] == 1)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.data].label} Target`,
+          id: `source_${matrixnames.data}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.data],
+          isVisible: options => {
+            return (options['next_previous_action'] == false && options['matrix'] == 2)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.multichannelaudio].label} Target`,
+          id: `source_${matrixnames.multichannelaudio}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.multichannelaudio],
+          isVisible: options => {
+            return (options['next_previous_action'] == false && options['matrix'] == 3)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.gpio].label} Target`,
+          id: `source_${matrixnames.gpio}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.gpio],
+          isVisible: options => {
+            return (options['next_previous_action'] == false && options['matrix'] == 4)
+          }
+        }
+      ],
+      callback: setSelectedSource(self, emberClient, config, state)
+    },
+    [ActionId.SetTarget]: {
+      name: 'Select Target',
+      options: [
+        {
+          id: 'next_previous_action',
+          type: 'checkbox',
+          label: 'NEXT/PREVIOUS Action',
+          default: false
+        },
+        {
+          id: 'next_previous',
+          type: 'dropdown',
+          label: 'Next or Previous',
+          default: 'next',
+          choices: nextPreviousChoices,
+          isVisible: (options) => {
+            return (options['next_previous_action'] == true)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: 'Matrix',
+          id: 'matrix',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: matrixChoices,
+          isVisible: (options) => {
+            return (options['next_previous_action'] == false)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.video].label} Target`,
+          id: `target_${matrixnames.video}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.video],
+          isVisible: (options) => {
+            return (options['next_previous_action'] == false && options['matrix'] == 0)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.audio].label} Target`,
+          id: `target_${matrixnames.audio}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.audio],
+          isVisible: options => {
+            return (options['next_previous_action'] == false && options['matrix'] == 1)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.data].label} Target`,
+          id: `target_${matrixnames.data}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.data],
+          isVisible: options => {
+            return (options['next_previous_action'] == false && options['matrix'] == 2)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.multichannelaudio].label} Target`,
+          id: `target_${matrixnames.multichannelaudio}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.multichannelaudio],
+          isVisible: options => {
+            return (options['next_previous_action'] == false && options['matrix'] == 3)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.gpio].label} Target`,
+          id: `target_${matrixnames.gpio}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.gpio],
+          isVisible: options => {
+            return (options['next_previous_action'] == false && options['matrix'] == 4)
+          }
+        }
+      ],
+      callback: setSelectedTarget(self, state)
+    },
 
-        }
-      ],
-      callback: setSelectedSource(self, emberClient, config, state, matrixnames.video)
-    },
-    [ActionId.SetTargetVideo]: {
-      name: 'Select Video Target',
+    [ActionId.SetMatrix]: {
+      name: 'Select Matrix',
+      description: 'Choose a matrix. This way you can use the NEXT and PREVIOUS Actions to select targets and sources.',
       options: [
         {
           type: 'dropdown',
-          label: 'Value',
-          id: 'target',
+          label: 'Matrix',
+          id: 'matrix',
           default: 0,
           minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.video]
+          choices: matrixChoices
         }
       ],
-      callback: setSelectedTarget(self, state, matrixnames.video)
-    },
-    [ActionId.SetSourceAudio]: {
-      name: 'Select Audio Source',
-      options: [
-        {
-          type: 'dropdown',
-          label: 'Value',
-          id: 'source',
-          default: 0,
-          minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.audio]
-        },
-        {
-          type: 'checkbox',
-          label: 'Direct Take',
-          id: 'do_take',
-          default: false,
-          isVisible: (options): boolean => {
-            return !(options['source'] === 'next' || options['source'] === 'previous')
-          }
-        }
-      ],
-      callback: setSelectedSource(self, emberClient, config, state, matrixnames.audio)
-    },
-    [ActionId.SetTargetAudio]: {
-      name: 'Select Audio Target',
-      options: [
-        {
-          type: 'dropdown',
-          label: 'Value',
-          id: 'target',
-          default: 0,
-          minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.audio]
-        }
-      ],
-      callback: setSelectedTarget(self, state, matrixnames.audio)
-    },
-    [ActionId.SetSourceData]: {
-      name: 'Select Data Source',
-      options: [
-        {
-          type: 'dropdown',
-          label: 'Value',
-          id: 'source',
-          default: 0,
-          minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.data]
-        },
-        {
-          type: 'checkbox',
-          label: 'Direct Take',
-          id: 'do_take',
-          default: false,
-          isVisible: (options): boolean => {
-            return !(options['source'] === 'next' || options['source'] === 'previous')
-          }
-        }
-      ],
-      callback: setSelectedSource(self, emberClient, config, state, matrixnames.data)
-    },
-    [ActionId.SetTargetData]: {
-      name: 'Select Data Target',
-      options: [
-        {
-          type: 'dropdown',
-          label: 'Value',
-          id: 'target',
-          default: 0,
-          minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.data]
-        }
-      ],
-      callback: setSelectedTarget(self, state, matrixnames.data)
-    },
-    [ActionId.SetSourceMChAudio]: {
-      name: 'Select MultiChannelAudio Source',
-      options: [
-        {
-          type: 'dropdown',
-          label: 'Value',
-          id: 'source',
-          default: 0,
-          minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.multichannelaudio]
-        },
-        {
-          type: 'checkbox',
-          label: 'Direct Take',
-          id: 'do_take',
-          default: false,
-          isVisible: (options): boolean => {
-            return !(options['source'] === 'next' || options['source'] === 'previous')
-          }
-        }
-      ],
-      callback: setSelectedSource(self, emberClient, config, state, matrixnames.multichannelaudio)
-    },
-    [ActionId.SetTargetMChAudio]: {
-      name: 'Select MultiChannelAudio Target',
-      options: [
-        {
-          type: 'dropdown',
-          label: 'Value',
-          id: 'target',
-          default: 0,
-          minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.multichannelaudio]
-        }
-      ],
-      callback: setSelectedTarget(self, state, matrixnames.multichannelaudio)
-    },
-    [ActionId.SetSourceGPIO]: {
-      name: 'Select GPI Source',
-      options: [
-        {
-          type: 'dropdown',
-          label: 'Value',
-          id: 'source',
-          default: 0,
-          minChoicesForSearch: 10,
-          choices: inputChoices[matrixnames.gpio]
-        },
-        {
-          type: 'checkbox',
-          label: 'Direct Take',
-          id: 'do_take',
-          default: false,
-          isVisible: (options): boolean => {
-            return !(options['source'] === 'next' || options['source'] === 'previous')
-          }
-        }
-      ],
-      callback: setSelectedSource(self, emberClient, config, state, matrixnames.gpio)
-    },
-    [ActionId.SetTargetGPIO]: {
-      name: 'Select GPO Target',
-      options: [
-        {
-          type: 'dropdown',
-          label: 'Value',
-          id: 'target',
-          default: 0,
-          minChoicesForSearch: 10,
-          choices: outputChoices[matrixnames.gpio]
-        }
-      ],
-      callback: setSelectedTarget(self, state, matrixnames.gpio)
+      callback: setSelectedMatrix(self, state)
     }
   }
 
