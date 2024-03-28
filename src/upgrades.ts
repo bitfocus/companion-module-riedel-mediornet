@@ -3,7 +3,7 @@ import { DeviceConfig } from './config'
 import { matrixnames } from './state'
 
 
-const upgradeV1_1_4: CompanionStaticUpgradeScript<DeviceConfig> = (_context, props): CompanionStaticUpgradeResult<DeviceConfig> => {
+const upgradeV1_2_0: CompanionStaticUpgradeScript<DeviceConfig> = (_context, props): CompanionStaticUpgradeResult<DeviceConfig> => {
   let config: any = props.config
   let actions: any = props.actions
   let feedbacks: any = props.feedbacks
@@ -207,5 +207,5 @@ const upgradeV1_1_4: CompanionStaticUpgradeScript<DeviceConfig> = (_context, pro
 }
 
 export const getUpgrades = (): CompanionStaticUpgradeScript<DeviceConfig>[] => {
-  return [upgradeV1_1_4]
+  return [upgradeV1_2_0]
 }
