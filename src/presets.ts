@@ -315,6 +315,7 @@ export function GetPresetsList(state: DeviceState): CompanionPresetDefinitions {
                 {
                   actionId: 'select_target',
                   options: {
+                    matrix: matrix.id,
                     [`target_${matrix.id}`]: key,
                   },
                 },
