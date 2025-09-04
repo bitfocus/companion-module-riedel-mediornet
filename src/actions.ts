@@ -99,55 +99,56 @@ const doSpecificMatrixActionFunction = function (
     target: number
   }
 ) {
+
   const { matrix, source, target } = options
 
-  if (source !== -1 && target !== -1 && matrix !== -1) {
-    if (source !== -1 && target !== -1 && matrix !== -1) {
-      const matrixObject = state.matrices[matrix]
-      const matrixLabel = matrixObject.label
-      self.log('debug', `Get node ${matrixLabel} matrix`)
-      emberClient
-        .getElementByPathAsync(matrixObject.path)
-        .then((node) => {
-          if (node && node instanceof QualifiedMatrix) {
-            //self.log('debug', 'Got node on ' + matrixLabel)
-            const sources = [source]
-            emberClient
-              .matrixConnectAsync(node, target, sources)
-              .then(() => self.log('debug', 'send ok: '))
-              .catch((r) => self.log('debug', r))
-          } else {
-            self.log(
-              'warn',
-              'Matrix ' +
-              matrixLabel +
-              ' on ' +
-              matrixObject.path +
-              ' not found.'
-            )
-          }
-        })
-        .catch((reason) => self.log('error', reason))
-        .finally(() => {
-
-          self.checkFeedbacks(
-            FeedbackId.SelectedTarget,
-            FeedbackId.TakeTallySource,
-            FeedbackId.SelectedSource,
-            FeedbackId.RoutingTally,
-            FeedbackId.SelectedMatrix,
-            FeedbackId.Take,
-            FeedbackId.Clear,
-            FeedbackId.Undo
-          )
-          updateSelectedTargetVariables(self, state)
-          updateSpecificTargetVariables(self, state, {
-            matrix: matrix,
-            target: target
-          })
-        })
-    }
+  if (source === -1 || target === -1 || matrix === -1 || matrix === undefined || source === undefined || target === undefined) {
+    self.log('debug', 'doSpecificMatrixActionFunction: ' + matrix + ' ' + source + ' ' + target)
+    return
   }
+
+  const matrixObject = state.matrices[matrix]
+  const matrixLabel = matrixObject.label
+  emberClient
+    .getElementByPathAsync(matrixObject.path)
+    .then((node) => {
+      if (node && node instanceof QualifiedMatrix) {
+        //self.log('debug', 'Got node on ' + matrixLabel)
+        const sources = [source]
+        emberClient
+          .matrixConnectAsync(node, target, sources)
+          .then(() => self.log('debug', 'send ok: '))
+          .catch((r) => self.log('debug', r))
+      } else {
+        self.log(
+          'warn',
+          'Matrix ' +
+          matrixLabel +
+          ' on ' +
+          matrixObject.path +
+          ' not found.'
+        )
+      }
+    })
+    .catch((reason) => self.log('error', reason))
+    .finally(() => {
+
+      self.checkFeedbacks(
+        FeedbackId.SelectedTarget,
+        FeedbackId.TakeTallySource,
+        FeedbackId.SelectedSource,
+        FeedbackId.RoutingTally,
+        FeedbackId.SelectedMatrix,
+        FeedbackId.Take,
+        FeedbackId.Clear,
+        FeedbackId.Undo
+      )
+      updateSelectedTargetVariables(self, state)
+      updateSpecificTargetVariables(self, state, {
+        matrix: matrix,
+        target: target
+      })
+    })
 }
 
 /**
@@ -192,9 +193,9 @@ const doRoute =
       )
 
       doSpecificMatrixActionFunction(self, emberClient, state, {
-        matrix: state.selected.matrix,
-        source: state.selected.source,
-        target: state.selected.target
+        matrix: Number(matrix),
+        source: Number(source),
+        target: Number(target)
       })
     }
 

@@ -120,12 +120,17 @@ export function updateSpecificTargetVariables(self: InstanceBase<DeviceConfig>, 
   const { matrix, target } = options
   const variableValues: CompanionVariableValues = {}
 
-  if (matrix != -1 && target != -1) {
+  if (matrix === -1 || target === -1 || matrix === undefined || target === undefined) {
     return
   }
 
   const targetObject = state.matrices[matrix].outputs.get(target)
   const inputIdx = targetObject?.route
+
+  if (inputIdx === undefined || inputIdx === -1) {
+    return
+  }
+
   const inputForTarget = targetObject
     ? state.getInput(inputIdx, matrix)
     : undefined
