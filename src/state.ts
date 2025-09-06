@@ -343,7 +343,7 @@ export class DeviceState {
         }
       }
 
-      this.self.saveConfig(this.self.config)
+      this.self.saveConfig(this.self.config, undefined)
     }
   }
 }
