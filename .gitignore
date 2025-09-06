@@ -1,3 +1,5 @@
 /node_modules/
 /dist/
-/yarn.lock
+pkg/*
+pkg.tgz
+install-state.gz
