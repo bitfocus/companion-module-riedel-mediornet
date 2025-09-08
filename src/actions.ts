@@ -8,7 +8,7 @@ import { DeviceConfig } from './config'
 import { FeedbackId } from './feedback'
 import { matrixnames, DeviceState } from './state'
 import { getChoices } from './choices'
-import { updateSelectedTargetVariables } from './variables'
+import { updateSelectedTargetVariables, updateSpecificTargetVariables } from './variables'
 import { EmberClient } from 'node-emberplus/lib/client/ember-client'
 import { QualifiedMatrix } from 'node-emberplus/lib/common/matrix/qualified-matrix'
 
@@ -19,6 +19,7 @@ export enum ActionId {
   SetSource = 'select_source',
   SetTarget = 'select_target',
   SetMatrix = 'select_matrix',
+  Route = 'route',
 }
 
 /**
@@ -28,7 +29,7 @@ export enum ActionId {
  * @param config reference to the config of the module
  * @param state reference to the state of the module
  */
-const doMatrixActionFunction = function(
+const doMatrixActionFunction = function (
   self: InstanceBase<DeviceConfig>,
   emberClient: EmberClient,
   config: DeviceConfig,
@@ -80,6 +81,125 @@ const doMatrixActionFunction = function(
   }
 }
 
+
+/**
+ * Performes a connection on a specified matrix, with a specific source and target.
+ * @param self reference to the BaseInstance
+ * @param emberClient reference to the emberClient
+ * @param config reference to the config of the module
+ * @param state reference to the state of the module
+ */
+const doSpecificMatrixActionFunction = function (
+  self: InstanceBase<DeviceConfig>,
+  emberClient: EmberClient,
+  state: DeviceState,
+  options: {
+    matrix: number,
+    source: number,
+    target: number
+  }
+) {
+
+  const { matrix, source, target } = options
+
+  if (source === -1 || target === -1 || matrix === -1 || matrix === undefined || source === undefined || target === undefined) {
+    self.log('debug', 'doSpecificMatrixActionFunction: ' + matrix + ' ' + source + ' ' + target)
+    return
+  }
+
+  const matrixObject = state.matrices[matrix]
+  const matrixLabel = matrixObject.label
+  emberClient
+    .getElementByPathAsync(matrixObject.path)
+    .then((node) => {
+      if (node && node instanceof QualifiedMatrix) {
+        //self.log('debug', 'Got node on ' + matrixLabel)
+        const sources = [source]
+        emberClient
+          .matrixConnectAsync(node, target, sources)
+          .then(() => self.log('debug', 'send ok: '))
+          .catch((r) => self.log('debug', r))
+      } else {
+        self.log(
+          'warn',
+          'Matrix ' +
+          matrixLabel +
+          ' on ' +
+          matrixObject.path +
+          ' not found.'
+        )
+      }
+    })
+    .catch((reason) => self.log('error', reason))
+    .finally(() => {
+
+      self.checkFeedbacks(
+        FeedbackId.SelectedTarget,
+        FeedbackId.TakeTallySource,
+        FeedbackId.SelectedSource,
+        FeedbackId.RoutingTally,
+        FeedbackId.SelectedMatrix,
+        FeedbackId.Take,
+        FeedbackId.Clear,
+        FeedbackId.Undo
+      )
+      updateSelectedTargetVariables(self, state)
+      updateSpecificTargetVariables(self, state, {
+        matrix: matrix,
+        target: target
+      })
+    })
+}
+
+/**
+ * Gets called, when routing a specifc source to a specific target on a specific matrix.
+ * @param self reference to the BaseInstance
+ * @param emberClient reference to the emberClient
+ * @param config reference to the config of the module
+ * @param state reference to the state of the module
+ * @param request object with the matrix, source and target
+ */
+const doRoute =
+  (self: InstanceBase<DeviceConfig>, emberClient: EmberClient,
+    state: DeviceState) =>
+    (action: CompanionActionEvent): void => {
+      const matrix = action.options['matrix']
+      const source = action.options[`source_${matrix}`]
+      const target = action.options[`target_${matrix}`]
+
+      if (matrix === undefined) {
+        self.log('debug', 'TAKE went wrong. Matrix is undefined.')
+        return
+      }
+
+      if (source === undefined) {
+        self.log('debug', 'TAKE went wrong. Source is undefined.')
+        return
+      }
+
+      if (target === undefined) {
+        self.log('debug', 'TAKE went wrong. Target is undefined.')
+        return
+      }
+
+      self.log(
+        'debug',
+        'TAKE: source: ' +
+        source +
+        ' destination: ' +
+        target +
+        ' on matrix ' +
+        matrix
+      )
+
+      doSpecificMatrixActionFunction(self, emberClient, state, {
+        matrix: Number(matrix),
+        source: Number(source),
+        target: Number(target)
+      })
+    }
+
+
 /**
  * Gets called, wenn take is not on Auto-Take.
  * Performes a connect on the wanted matrix
@@ -90,12 +210,12 @@ const doMatrixActionFunction = function(
  */
 const doTake =
   (self: InstanceBase<DeviceConfig>, emberClient: EmberClient,
-   config: DeviceConfig, state: DeviceState) =>
+    config: DeviceConfig, state: DeviceState) =>
     (): void => {
       if (state.selected.target !== -1 && state.selected.source !== -1 && state.selected.matrix !== -1) {
         self.log(
           'debug',
-          'TAKE: selectedDest: ' +
+          'ROUTE: selectedDest: ' +
           state.selected.target +
           ' selected.source: ' +
           state.selected.source +
@@ -129,24 +249,24 @@ const doClear = (self: InstanceBase<DeviceConfig>, state: DeviceState) => (): vo
 }
 
 const doUndo = (self: InstanceBase<DeviceConfig>, emberClient: EmberClient,
-                config: DeviceConfig, state: DeviceState) => (): void => {
-  const selOut = state.matrices[state.selected.matrix].outputs.get(state.selected.target)
-  if (selOut != undefined && selOut.fallback[selOut.fallback.length - 2] != undefined) {
-    selOut.fallback.pop()
-    state.selected.source = selOut.fallback.pop() ?? -1
-    doMatrixActionFunction(self, emberClient, config, state)
-    self.checkFeedbacks(
-      FeedbackId.SelectedTarget,
-      FeedbackId.TakeTallySource,
-      FeedbackId.SelectedSource,
-      FeedbackId.RoutingTally,
-      FeedbackId.SelectedMatrix,
-      FeedbackId.Take,
-      FeedbackId.Clear,
-      FeedbackId.Undo
-    )
+  config: DeviceConfig, state: DeviceState) => (): void => {
+    const selOut = state.matrices[state.selected.matrix].outputs.get(state.selected.target)
+    if (selOut != undefined && selOut.fallback[selOut.fallback.length - 2] != undefined) {
+      selOut.fallback.pop()
+      state.selected.source = selOut.fallback.pop() ?? -1
+      doMatrixActionFunction(self, emberClient, config, state)
+      self.checkFeedbacks(
+        FeedbackId.SelectedTarget,
+        FeedbackId.TakeTallySource,
+        FeedbackId.SelectedSource,
+        FeedbackId.RoutingTally,
+        FeedbackId.SelectedMatrix,
+        FeedbackId.Take,
+        FeedbackId.Clear,
+        FeedbackId.Undo
+      )
+    }
   }
-}
 
 /**
  * Selects a source on a specific matrix.
@@ -312,6 +432,134 @@ export function GetActionsList(
   const { inputChoices, outputChoices, matrixChoices, nextPreviousChoices } = getChoices(state)
 
   const actions: { [id in ActionId]: CompanionActionDefinition | undefined } = {
+    [ActionId.Route]: {
+      name: 'Route',
+      options: [
+        // Shared
+        {
+          type: 'dropdown',
+          label: 'Matrix',
+          id: 'matrix',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: matrixChoices,
+        },
+        // Source
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.video].label} Source`,
+          id: `source_${matrixnames.video}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.video],
+          isVisible: (options) => {
+            return (options['matrix'] == 0)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.audio].label} Target`,
+          id: `source_${matrixnames.audio}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.audio],
+          isVisible: (options) => {
+            return (options['matrix'] == 1)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.data].label} Target`,
+          id: `source_${matrixnames.data}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.data],
+          isVisible: (options) => {
+            return (options['matrix'] == 2)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.multichannelaudio].label} Target`,
+          id: `source_${matrixnames.multichannelaudio}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.multichannelaudio],
+          isVisible: (options) => {
+            return (options['matrix'] == 3)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.gpio].label} Target`,
+          id: `source_${matrixnames.gpio}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: inputChoices[matrixnames.gpio],
+          isVisible: (options) => {
+            return (options['matrix'] == 4)
+          }
+        },
+        // Destination
+
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.video].label} Target`,
+          id: `target_${matrixnames.video}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.video],
+          isVisible: (options) => {
+            return (options['matrix'] == 0)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.audio].label} Target`,
+          id: `target_${matrixnames.audio}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.audio],
+          isVisible: (options) => {
+            return (options['matrix'] == 1)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.data].label} Target`,
+          id: `target_${matrixnames.data}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.data],
+          isVisible: (options) => {
+            return (options['matrix'] == 2)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.multichannelaudio].label} Target`,
+          id: `target_${matrixnames.multichannelaudio}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.multichannelaudio],
+          isVisible: (options) => {
+            return (options['matrix'] == 3)
+          }
+        },
+        {
+          type: 'dropdown',
+          label: `${state.matrices[matrixnames.gpio].label} Target`,
+          id: `target_${matrixnames.gpio}`,
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.gpio],
+          isVisible: (options) => {
+            return (options['matrix'] == 4)
+          }
+        },
+      ],
+      callback: doRoute(self, emberClient, state)
+    },
     [ActionId.Take]: {
       name: 'Take',
       options: [],

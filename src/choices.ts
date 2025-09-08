@@ -19,25 +19,25 @@ export function getChoices(state: DeviceState): InputChoicesResult {
     matrixChoices: [],
     nextPreviousChoices: []
   }
-  result.nextPreviousChoices.push({id: 'next', label: 'NEXT'}, {id: 'previous', label: 'PREVIOUS'})
+
+  result.nextPreviousChoices.push({ id: 'next', label: 'NEXT' }, { id: 'previous', label: 'PREVIOUS' })
 
   for (let i = 0; i < state.matrices.length; i++) {
     result.inputChoices[i] = []
     result.outputChoices[i] = []
-    result.matrixChoices[i] = {id: i, label: state.matrices[i].label}
-
+    result.matrixChoices[i] = { id: i, label: state.matrices[i].label }
 
     state.iterateInputs(i).forEach((value, key) => {
-        if (value.active) {
-          result.inputChoices[i].push({ id: key, label: value.label })
-        }
+      if (value.active) {
+        result.inputChoices[i].push({ id: key, label: value.label })
       }
+    }
     )
     state.iterateOutputs(i).forEach((value, key) => {
-        if (value.active) {
-          result.outputChoices[i].push({ id: key, label: value.label })
-        }
+      if (value.active) {
+        result.outputChoices[i].push({ id: key, label: value.label })
       }
+    }
     )
   }
   return result
