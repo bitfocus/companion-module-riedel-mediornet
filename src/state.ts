@@ -25,6 +25,7 @@ const gpioPath = '1.2.4.3'
 export interface Matrix {
   id: number
   label: string
+  shortName: string
   variableName: string
   path: string
   inputs: Map<number, InputState>
@@ -67,11 +68,11 @@ export class DeviceState {
       matrix: -1
     }
     this.matrices = [
-      { id: 0, label: 'Video', variableName: 'video', path: videoPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
-      { id: 1, label: 'Audio',  variableName: 'audio', path: audioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
-      { id: 2, label: 'Data', variableName: 'data', path: dataPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
-      { id: 3, label: 'Multi Channel Audio', variableName: 'multichannelaudio', path: multiChannelAudioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []},
-      { id: 4, label: 'GPIO', variableName: 'gpio', path: gpioPath, inputs: new Map(), outputs: new Map() , inputList : [], outputList : []}
+      { id: 0, label: 'Video', shortName: 'vid', variableName: 'video', path: videoPath, inputs: new Map(), outputs: new Map(), inputList: [], outputList: [] },
+      { id: 1, label: 'Audio', shortName: 'aud', variableName: 'audio', path: audioPath, inputs: new Map(), outputs: new Map(), inputList: [], outputList: [] },
+      { id: 2, label: 'Data', shortName: 'dat', variableName: 'data', path: dataPath, inputs: new Map(), outputs: new Map(), inputList: [], outputList: [] },
+      { id: 3, label: 'Multi Channel Audio', shortName: 'mca', variableName: 'multichannelaudio', path: multiChannelAudioPath, inputs: new Map(), outputs: new Map(), inputList: [], outputList: [] },
+      { id: 4, label: 'GPIO', shortName: 'gpio', variableName: 'gpio', path: gpioPath, inputs: new Map(), outputs: new Map(), inputList: [], outputList: [] }
     ]
   }
 
@@ -162,7 +163,7 @@ export class DeviceState {
 
     let node = await emberClient.getElementByPathAsync(labelPath).then(
       async (tempNode) => {
-        await emberClient.getDirectoryAsync(tempNode).then().catch((e)=>this.self.log('error', 'Error on getLabels: ' + e))
+        await emberClient.getDirectoryAsync(tempNode).then().catch((e) => this.self.log('error', 'Error on getLabels: ' + e))
         return tempNode
       })
       .catch((error) => {
@@ -238,8 +239,8 @@ export class DeviceState {
 
       //MATRIX ----------------
       // Iterate init Process for each matrix
-      for (let i = 0; i < this.matrices.length; i++) {
-        const matrix = this.matrices[i]
+      for (let mtx = 0; mtx < this.matrices.length; mtx++) {
+        const matrix = this.matrices[mtx]
         const matrixNode = await this.self.emberClient
           .getElementByPathAsync(matrix.path)
           .then(async (node) => {
@@ -250,25 +251,25 @@ export class DeviceState {
         //check Node for properties of a matrixNode
         if (matrixNode instanceof QualifiedMatrix) {
           //Update Counts
-          inputs[i] = matrixNode.sources?.length != undefined ? String(matrixNode.sources.length) : '0'
-          outputs[i] = matrixNode.targets?.length != undefined ? String(matrixNode.targets.length) : '0'
+          inputs[mtx] = matrixNode.sources?.length != undefined ? String(matrixNode.sources.length) : '0'
+          outputs[mtx] = matrixNode.targets?.length != undefined ? String(matrixNode.targets.length) : '0'
           this.self.config.inputCountString = inputs.join(',')
           this.self.config.outputCountString = outputs.join(',')
 
-          this.matrices[i].inputs = new Map<number, InputState>()
-          this.matrices[i].outputs = new Map<number, OutputState>()
+          this.matrices[mtx].inputs = new Map<number, InputState>()
+          this.matrices[mtx].outputs = new Map<number, OutputState>()
 
           if (matrixNode.sources?.length != 0 && matrixNode.targets?.length != 0) {
 
             matrixNode.sources?.forEach((index) => {
-              this.matrices[i].inputs.set(index, {
+              this.matrices[mtx].inputs.set(index, {
                 label: `Input ${index + 1}`,
                 name: `Input ${index + 1}`,
                 active: true
               })
             })
             matrixNode.targets?.forEach((index) => {
-              this.matrices[i].outputs.set(index, {
+              this.matrices[mtx].outputs.set(index, {
                 label: `Output ${index + 1}`,
                 name: `Output ${index + 1}`,
                 active: true,
@@ -278,11 +279,11 @@ export class DeviceState {
               })
             })
 
-            this.matrices[i].inputList = Array.from(this.matrices[i].inputs.keys())
-            this.matrices[i].inputList.sort((a, b) => a - b)
+            this.matrices[mtx].inputList = Array.from(this.matrices[mtx].inputs.keys())
+            this.matrices[mtx].inputList.sort((a, b) => a - b)
 
-            this.matrices[i].outputList = Array.from(this.matrices[i].outputs.keys())
-            this.matrices[i].outputList.sort((a, b) => a - b)
+            this.matrices[mtx].outputList = Array.from(this.matrices[mtx].outputs.keys())
+            this.matrices[mtx].outputList.sort((a, b) => a - b)
 
 
 
@@ -292,7 +293,7 @@ export class DeviceState {
 
                 for (let connectionsKey in matrixUpdate.connections) {
                   const sources = matrixUpdate.connections[connectionsKey].sources
-                  let matrixElement = this.matrices[i].outputs.get(Number(connectionsKey))
+                  let matrixElement = this.matrices[mtx].outputs.get(Number(connectionsKey))
                   //console.log('key: ' + connectionsKey + ' sources: '+ sources + ' matrixElement: ' + JSON.stringify(matrixElement))
 
 
@@ -306,8 +307,11 @@ export class DeviceState {
                       FeedbackId.Undo
                     )
                     const variableValuesnew: CompanionVariableValues = {}
-                    variableValuesnew[`output_${this.matrices[i].variableName}_${Number(connectionsKey) + 1}_input`] =
-                      this.getInput(sources[0], i)?.label ?? '?'
+                    const activeInputIdx = sources[0]
+                    variableValuesnew[`output_${this.matrices[mtx].variableName}_${Number(connectionsKey) + 1}_input`] =
+                      this.getInput(activeInputIdx, mtx)?.label ?? '?'
+                    variableValuesnew[`output_${this.matrices[mtx].variableName}_${Number(connectionsKey) + 1}_input_id`] =
+                      activeInputIdx + 1
                     this.self.setVariableValues(variableValuesnew)
                   } // if sources != undefined
                 }
@@ -333,7 +337,7 @@ export class DeviceState {
               if (labelNode?.hasChildren()) {
                 labelNode?.elements.forEach((child) => {
                   if (child instanceof QualifiedNode) {
-                    this.getLabels(child.path, i, this.self.emberClient)
+                    this.getLabels(child.path, mtx, this.self.emberClient)
                   }
                 })
               } // for key in labelNodeCast
@@ -343,7 +347,7 @@ export class DeviceState {
         }
       }
 
-      this.self.saveConfig(this.self.config)
+      this.self.saveConfig(this.self.config, undefined)
     }
   }
 }
