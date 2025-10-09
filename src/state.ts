@@ -7,6 +7,7 @@ import { QualifiedParameter } from 'node-emberplus/lib/common/qualified-paramete
 import { CompanionVariableValues } from '@companion-module/base'
 import * as console from 'console'
 import { FeedbackId } from './feedback'
+import {updateSelectedTargetVariables} from "./variables"
 
 export enum matrixnames {
   video,
