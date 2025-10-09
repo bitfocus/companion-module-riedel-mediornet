@@ -7,6 +7,7 @@ import { QualifiedParameter } from 'node-emberplus/lib/common/qualified-paramete
 import { CompanionVariableValues } from '@companion-module/base'
 import * as console from 'console'
 import { FeedbackId } from './feedback'
+import {updateSelectedTargetVariables} from "./variables"
 
 export enum matrixnames {
   video,
@@ -313,6 +314,7 @@ export class DeviceState {
                     variableValuesnew[`output_${this.matrices[mtx].variableName}_${Number(connectionsKey) + 1}_input_id`] =
                       activeInputIdx + 1
                     this.self.setVariableValues(variableValuesnew)
+                    updateSelectedTargetVariables(this.self, this)
                   } // if sources != undefined
                 }
               } //if 'connections' in matrixUpdate
