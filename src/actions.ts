@@ -11,6 +11,7 @@ import { getChoices } from './choices'
 import { updateSelectedTargetVariables, updateSpecificTargetVariables } from './variables'
 import { EmberClient } from 'node-emberplus/lib/client/ember-client'
 import { QualifiedMatrix } from 'node-emberplus/lib/common/matrix/qualified-matrix'
+import { QualifiedParameter } from 'node-emberplus/lib/common/qualified-parameter'
 
 export enum ActionId {
   Take = 'take',
@@ -20,6 +21,7 @@ export enum ActionId {
   SetTarget = 'select_target',
   SetMatrix = 'select_matrix',
   Route = 'route',
+  SetTestPattern = 'set_test_pattern',
 }
 
 /**
@@ -423,6 +425,91 @@ const setSelectedMatrix =
  * @param state reference to the state of the module
  * @constructor
  */
+const testPatternChoices = [
+  { id: 0, label: 'Off' },
+  { id: 1, label: 'SD 525i59.94' },
+  { id: 2, label: 'SD 625i50' },
+  { id: 3, label: 'HD 720p60' },
+  { id: 4, label: 'HD 720p59.94' },
+  { id: 5, label: 'HD 720p50' },
+  { id: 6, label: 'HD 720p30' },
+  { id: 7, label: 'HD 720p29.97' },
+  { id: 8, label: 'HD 720p25' },
+  { id: 9, label: 'HD 720p24' },
+  { id: 10, label: 'HD 720p23.98' },
+  { id: 11, label: 'HD 1080i60' },
+  { id: 12, label: 'HD 1080i59.94' },
+  { id: 13, label: 'HD 1080i50' },
+  { id: 14, label: 'HD 1080p30' },
+  { id: 15, label: 'HD 1080p29.97' },
+  { id: 16, label: 'HD 1080p25' },
+  { id: 17, label: 'HD 1080p24' },
+  { id: 18, label: 'HD 1080p23.98' },
+  { id: 19, label: '3G-A 1080p60' },
+  { id: 20, label: '3G-A 1080p59.94' },
+  { id: 21, label: '3G-A 1080p50' },
+  { id: 22, label: '3G-B-DL 1080p60' },
+  { id: 23, label: '3G-B-DL 1080p59.94' },
+  { id: 24, label: '3G-B-DL 1080p50' },
+  { id: 25, label: '3G-B-DS 720p60' },
+  { id: 26, label: '3G-B-DS 720p59.94' },
+  { id: 27, label: '3G-B-DS 720p50' },
+  { id: 28, label: '3G-B-DS 720p30' },
+  { id: 29, label: '3G-B-DS 720p29.97' },
+  { id: 30, label: '3G-B-DS 720p25' },
+  { id: 31, label: '3G-B-DS 720p24' },
+  { id: 32, label: '3G-B-DS 720p23.98' },
+  { id: 33, label: '3G-B-DS 1080i60' },
+  { id: 34, label: '3G-B-DS 1080i59.94' },
+  { id: 35, label: '3G-B-DS 1080i50' },
+  { id: 36, label: '3G-B-DS 1080p30' },
+  { id: 37, label: '3G-B-DS 1080p29.97' },
+  { id: 38, label: '3G-B-DS 1080p25' },
+  { id: 39, label: '3G-B-DS 1080p24' },
+  { id: 40, label: '3G-B-DS 1080p23.98' },
+]
+
+const doSetTestPattern = (
+  self: InstanceBase<DeviceConfig>,
+  emberClient: EmberClient
+) => async (action: CompanionActionEvent): Promise<void> => {
+  const target = Number(action.options['target'])
+  const pattern = Number(action.options['pattern'])
+
+  // Read basePath from the video matrix target parameters node
+  const basePathParam = await emberClient
+    .getElementByPathAsync(`1.2.0.2.1.${target}.1`)
+    .catch((e) => {
+      self.log('error', 'SetTestPattern: failed to read basePath: ' + e)
+      return undefined
+    })
+
+  if (!(basePathParam instanceof QualifiedParameter)) {
+    self.log('warn', 'SetTestPattern: basePath parameter not found for target ' + target)
+    return
+  }
+
+  const basePath = basePathParam.value as string
+  const testPatternPath = `${basePath}.176`
+
+  const testPatternParam = await emberClient
+    .getElementByPathAsync(testPatternPath)
+    .catch((e) => {
+      self.log('error', 'SetTestPattern: failed to read testPattern node: ' + e)
+      return undefined
+    })
+
+  if (!(testPatternParam instanceof QualifiedParameter)) {
+    self.log('warn', 'SetTestPattern: testPattern parameter not found at ' + testPatternPath)
+    return
+  }
+
+  await emberClient
+    .setValueAsync(testPatternParam, pattern)
+    .then(() => self.log('debug', 'SetTestPattern: set pattern ' + pattern + ' on output ' + target))
+    .catch((e) => self.log('error', 'SetTestPattern: setValueAsync failed: ' + e))
+}
+
 export function GetActionsList(
   self: InstanceBase<DeviceConfig>,
   emberClient: EmberClient,
@@ -776,7 +863,30 @@ export function GetActionsList(
         }
       ],
       callback: setSelectedMatrix(self, state)
-    }
+    },
+
+    [ActionId.SetTestPattern]: {
+      name: 'Set Test Pattern',
+      options: [
+        {
+          type: 'dropdown',
+          label: 'Video Output',
+          id: 'target',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: outputChoices[matrixnames.video],
+        },
+        {
+          type: 'dropdown',
+          label: 'Test Pattern',
+          id: 'pattern',
+          default: 0,
+          minChoicesForSearch: 10,
+          choices: testPatternChoices,
+        },
+      ],
+      callback: doSetTestPattern(self, emberClient)
+    },
   }
 
   return actions
