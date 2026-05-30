@@ -323,15 +323,20 @@ export function GetFeedbacksList(
         }
       ],
       callback: (feedback) => {
-        let matrix = Number(feedback.options['matrix'])
-        let source = Number(feedback.options[`source_${matrix}`])
-        if (Number.isNaN(matrix) && Number.isNaN(source) && (
+        const matrix = Number(feedback.options['matrix'])
+        const source = Number(feedback.options[`source_${matrix}`])
+        const selectedOutput = state.getSelectedOutput(matrix)
+
+        if (
+          Number.isNaN(matrix) ||
+          Number.isNaN(source) ||
           state.selected.matrix !== matrix ||
-          state.matrices[state.selected.matrix].outputs == undefined ||
-          state.matrices[state.selected.matrix].outputs.get(state.selected.target) == undefined ||
-          state.matrices[state.selected.matrix].outputs.get(state.selected.target)?.route == undefined)
-        )return false
-        return source == state.matrices[state.selected.matrix].outputs.get(state.selected.target)?.route
+          selectedOutput?.route == undefined
+        ) {
+          return false
+        }
+
+        return source == selectedOutput.route
       }
     },
     [FeedbackId.RoutingTally]: {

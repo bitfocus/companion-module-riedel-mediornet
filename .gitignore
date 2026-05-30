@@ -3,3 +3,4 @@
 pkg/*
 pkg.tgz
 install-state.gz
+.DS_Store
