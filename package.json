@@ -26,12 +26,12 @@
 	},
 	"prettier": "@companion-module/tools/.prettierrc.json",
 	"dependencies": {
-		"@companion-module/base": "^1.7.0",
+		"@companion-module/base": "~1.15.0",
 		"@types/node": "^18.19.6",
 		"node-emberplus": "^3.0.5"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^2.8.0",
+		"@companion-module/tools": "^2.9.0",
 		"husky": "^8.0.3",
 		"lint-staged": "^15.2.0",
 		"rimraf": "^5.0.5",
