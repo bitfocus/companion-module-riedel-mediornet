@@ -1,6 +1,6 @@
 {
 	"name": "riedel-mediornet",
-	"version": "1.4.1",
+	"version": "1.4.2",
 	"main": "dist/index.js",
 	"scripts": {
 		"prepare": "husky install",
